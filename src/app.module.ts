@@ -19,7 +19,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     TypeOrmModule.forRoot({
         type: 'sqlite',
         database: 'database.sqlite',
-        entities: [__dirname +'/**/*.entity{.ts,.js}'],
+        autoLoadentities: true,
         synchronize: true,
     }),
     ProductsModule,
