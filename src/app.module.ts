@@ -14,7 +14,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
     ObserveModule.forRoot({
       appKey: 'DijCBdYxSmPfFDFr',
-      appSecret: process.env.APP_SECRET!,
+      appSecret: process.env.APP_SECRET || '',
       serviceId: 'belajar1',
       }),
 
