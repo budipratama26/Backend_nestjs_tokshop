@@ -17,9 +17,9 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'belajar1',
       }),
     TypeOrmModule.forRoot({
-        type: 'sqlite',
+        type: 'better-sqlite3',
         database: 'database.sqlite',
-        autoLoadentities: true,
+        autoLoadEntities: true,
         synchronize: true,
     }),
     ProductsModule,
