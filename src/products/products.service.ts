@@ -2,62 +2,62 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { Product } from './entities/product.entity.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ProductsService {
+  constructor(
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+  ) {}
+
   private products: Product[] = [];
 
-  create(createProductDto: CreateProductDto) {
-    const newProduct: Product = {
-      id: Date.now(),
-      name: createProductDto.name,
-      price: createProductDto.price,
-      quantity: createProductDto.quantity,
-      description: createProductDto.description,
-    };
-
-    this.products.push(newProduct);
-
+  async create(createProductDto: CreateProductDto) {
+    const newProduct = 
+    this.productRepository.create(createProductDto);
+    await
+    this.productRepository.save(newProduct);
+     
     return{
       message: 'Barang telah di tambahkan',
       data: newProduct
     };
   }
 
-  findAll() {
-    return this.products;
+  async findAll() {
+    return await this.productRepository.find();
   }
 
-  findOne(id: number) {
-    const product = this.products.find(item => item.id === id);
+  async findOne(id: number) {
+    const product = await
+    this.productRepository.findOneBy({id});
     if (!product) {
-      throw new NotFoundException(`Barang dengan ID ${id} tidak ditemukan!`);
+      throw new NotFoundException(`Barang dengan ID ${id} tidak ditemukan`);
     }
     return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    const productIndex = this.products.findIndex(item => item.id === id);
-    if (productIndex === -1) {
-      throw new NotFoundException(`Barang gagal diubah. ID ${id} tidak ada!`);
-    }
-    this.products[productIndex] = {
-      ...this.products[productIndex],
-        ...updateProductDto
-    };
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    const product = await
+    this.findOne(id);
+    const updatedProduct = this.productRepository.merge(product, updateProductDto);
+    await
+    this.productRepository.save(updatedProduct);
     return {
-      message: `Barang berhasil diubah!`,
-      data: this.products[productIndex]
+      message: `Barang berhasil diupdate di database!`,
+      data: updatedProduct
     };
   }
 
-  remove(id: number) {
-    const productIndex = this.products.findIndex(item => item.id === id);
-    if (productIndex === -1) {
-      throw new NotFoundException(`Barang gagal dihapus. ID ${id} tidak ada!`);
-    }
-    this.products.splice(productIndex,1);
+  async remove(id: number) {
+    await this.findOne(id);
+    await
+    this.productRepository.delete(id);
 
-    return {message: `Barang dengan ID ${id} berhasil di hapus le!`};
+    return {
+      message: `Barang dengan ID ${id} berhasil dihapus dari database!`
+    };
   }
 }

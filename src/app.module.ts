@@ -4,18 +4,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ProductsModule } from './products/products.module.js';
+import { ConfigModule } from '@nestjs/config';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
+    ConfigModule.forRoot(),
+
     ObserveModule.forRoot({
       appKey: 'DijCBdYxSmPfFDFr',
-      appSecret: 'bjgd!AsR9CNSCdKUkiSXSH%!P$IFW5XewMm97K^mp&vU5',
+      appSecret: process.env.APP_SECRET,
       serviceId: 'belajar1',
       }),
+
     TypeOrmModule.forRoot({
         type: 'better-sqlite3',
         database: 'database.sqlite',
