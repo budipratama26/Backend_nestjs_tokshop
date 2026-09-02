@@ -14,9 +14,9 @@ export class ProductsService {
 
   private products: Product[] = [];
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto,user:any) {
     const newProduct = 
-    this.productRepository.create(createProductDto);
+    this.productRepository.create({...createProductDto,user: {id:user.sub},});
     await
     this.productRepository.save(newProduct);
      
@@ -27,7 +27,21 @@ export class ProductsService {
   }
 
   async findAll() {
-    return await this.productRepository.find();
+    return await this.productRepository.find({relations:{user:true,},
+    select:{
+      id:true,
+      name:true,
+      price:true,
+      quantity:true,
+      description:true,
+      user: {
+        id:true,
+        name:true,
+        email:true,
+        role:true,
+      },
+    },
+  });
   }
 
   async findOne(id: number) {
