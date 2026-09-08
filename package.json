@@ -1,10 +1,10 @@
 {
   "name": "be-nestjs",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "E-Commerce Backend REST API built with NestJS, TypeORM, and Docker",
+  "author": "Msbp",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "build": "nest build",
