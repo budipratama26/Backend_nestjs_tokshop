@@ -1,114 +1,146 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# TokShop Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-ready e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed with strict security practices, role-based access control (RBAC), database migrations, and containerization.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🛠 Tech Stack & Architecture
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Framework:** NestJS (Node.js & TypeScript, ES Modules)
+- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM
+- **Authentication:** JWT (JSON Web Token) + `bcrypt` password hashing
+- **Authorization:** Role-Based Access Control (RBAC) with custom `@Roles()` decorator and `RolesGuard` (Admin, Seller, Customer)
+- **Validation:** `class-validator` & `class-transformer` (DTO whitelisting) + `Joi` schema validation for `.env` fail-fast startup
+- **Security:** `helmet` headers, CORS enabled, `@nestjs/throttler` (Rate limiting), Anti-IDOR ownership verification
+- **Logging:** Structured logging using `nestjs-pino` & `pino-pretty`
+- **File Handling:** Secure file upload using `Multer` with extension & size validation
+- **Documentation:** Swagger OpenAPI (`/api`)
+- **API Versioning:** URI Versioning (`/v1/...`)
+- **Containerization:** Multi-stage `Dockerfile` (Node 22 Alpine)
+- **Test Runner:** `vitest` + `@nestjs/testing`
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 📂 Project Structure
+
+```text
+src/
+├── auth/            # Authentication, JWT strategy, login, and roles guard
+├── common/          # Global filters, interceptors, and custom decorators
+├── migrations/      # TypeORM database migration files
+├── orders/          # Order management and transaction processing
+├── products/        # Product CRUD, upload interceptors, search & filter
+├── users/           # User registration and profile management
+├── app.module.ts    # Root application module with security & logging imports
+└── main.ts          # Application bootstrap with versioning, helmet, and swagger
 ```
 
-## Compile and run the project
+---
 
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js:** v22+ or v24+
+- **npm:** v10+
+
+### 1. Clone & Install Dependencies
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone https://github.com/budipratama26/Backend_nestjs_tokshop.git
+cd Backend_nestjs_tokshop
+npm install
 ```
 
-## Run tests
-
+### 2. Environment Setup
+Copy `.env.example` to `.env`:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
+Configure your environment variables in `.env`:
+```env
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=your_super_secret_jwt_key_here
+```
+> **Note:** Application uses fail-fast startup validation with Joi. It will refuse to boot if `JWT_SECRET` is missing.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 3. Database Migration
+Run the existing migrations to build the SQLite schema:
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx tsx ./node_modules/typeorm/cli.js migration:run -d data-source.ts
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 4. Running the App
 
-## Observability
+```bash
+# Development mode (watch)
+npm run start:dev
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+# Production build & run
+npm run build
+npm run start:prod
+```
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+API will be running on `http://localhost:3000`.
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+---
 
-## Resources
+## 🐳 Running with Docker
 
-Check out a few resources that may come in handy when working with NestJS:
+You can build and run the application inside a multi-stage Docker container:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# Build image
+docker build -t tokshop-api .
 
-## Support
+# Run container
+docker run -p 3000:3000 --env-file .env tokshop-api
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 📖 API Documentation (Swagger)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Interactive Swagger documentation is available at:
+```text
+http://localhost:3000/api
+```
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📌 Key API Endpoints (v1)
+
+All endpoints are prefixed with `/v1/`.
+
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `POST` | `/v1/auth/login` | Login and receive JWT access token | Public |
+| `POST` | `/v1/users` | Register a new user (`customer` / `seller`) | Public |
+| `GET` | `/v1/users/:id` | Get user profile | Authenticated |
+| `GET` | `/v1/products` | Get products (with pagination, sort, search) | Public |
+| `GET` | `/v1/products/:id` | Get product detail | Public |
+| `POST` | `/v1/products` | Create product (supports image upload) | Seller Only |
+| `PATCH` | `/v1/products/:id` | Update product (Anti-IDOR protected) | Owner Seller |
+| `DELETE` | `/v1/products/:id` | Soft delete product | Owner Seller |
+| `POST` | `/v1/orders` | Create an order | Authenticated |
+| `GET` | `/v1/orders` | List user orders | Authenticated |
+
+---
+
+## 🧪 Testing
+
+Unit tests are written using `vitest` and `@nestjs/testing`:
+
+```bash
+# Run unit tests
+npm run test
+
+# Run tests with coverage report
+npm run test:cov
+```
+
+---
+
+## 📝 License
+
+Distributed under the [MIT License](LICENSE).
