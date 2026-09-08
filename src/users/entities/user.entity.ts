@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, type Relation } from 'typeorm';
 import { Product } from '../../products/entities/product.entity.js';
 
 @Entity()
@@ -19,5 +19,5 @@ export class User {
     role: string;
 
     @OneToMany(()=> Product,(product)=>product.user)
-    products: Product[];
+    products: Relation<Product[]>;
 }
