@@ -7,11 +7,11 @@ export class CreateUserDto {
     @IsNotEmpty({ message: `Nama gaboleh kosong!` })
     name: string;
 
-    @ApiProperty({ example: 'budi@toksop.com', description: 'Alamat email aktif' })
+    @ApiProperty({ example: 'budi@tokshop.com', description: 'Alamat email aktif' })
     @IsEmail({}, { message: ` format email gak valid!` })
     email: string;
 
-    @ApiProperty({ example: 'password12345', description: 'Password minimal 8 karakter', required: false })
+    @ApiProperty({ example: 'password123', description: 'Password minimal 8 karakter', required: false })
     @IsString()
     @MinLength(8, { message: `password minimal 8 karakter` })
     password: string;

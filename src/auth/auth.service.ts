@@ -6,18 +6,18 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
-  
+  ) { }
+
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
-      throw new UnauthorizedException(`Email atau password salah kontol!`);
+      throw new UnauthorizedException(`Email atau password salah!`);
     }
-    const isPasswordValid = await bcrypt.compare(loginDto.password,user.password);
+    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException(`Email atau password salah!`);
     }

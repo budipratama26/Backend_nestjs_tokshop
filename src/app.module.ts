@@ -10,6 +10,8 @@ import { OrdersModule } from './orders/orders.module.js';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -38,6 +40,10 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     UsersModule,
     AuthModule,
     OrdersModule,
+
+    ServeStaticModule.forRoot({rootPath: join(process.cwd(),'uploads'),
+      serveRoot: '/uploads',
+    }),
   ],
   controllers: [AppController],
   providers: [

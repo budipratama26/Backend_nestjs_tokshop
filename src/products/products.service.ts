@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { Product } from './entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { QueryProductDto } from './dto/query-product.dto.js';
 
 @Injectable()
 export class ProductsService {
@@ -26,37 +27,52 @@ export class ProductsService {
     };
   }
 
-  async findAll() {
-    return await this.productRepository.find({
-      relations: { user: true, },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        quantity: true,
-        description: true,
-        user: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
+  async findAll(queryDto?: QueryProductDto) {
+    const page = queryDto?.page || 1;
+    const limit = queryDto?.limit || 10;
+    const search = queryDto?.search;
+    const sortBy = queryDto?.sortBy || 'id';
+    const order = (queryDto?.order?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+    const query = this.productRepository.createQueryBuilder('product').leftJoinAndSelect('product.user', 'user');
+    if (search) {
+      query.where(
+        'product.name LIKE :search OR product.description LIKE :search', { search: `%${search}%` },
+      );
+    }
+
+    query.orderBy(`product.${sortBy}`, order);
+
+    query.skip((page - 1) * limit).take(limit);
+    const [products, total] = await query.getManyAndCount();
+    return {
+      items: products,
+      meta: {
+        totalItems: total,
+        curretPage: page,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async findOne(id: number) {
     const product = await
-      this.productRepository.findOneBy({ id });
+      this.productRepository.findOne({
+        where: { id },
+        relations: { user: true },
+      });
     if (!product) {
       throw new NotFoundException(`Barang dengan ID ${id} tidak ditemukan`);
     }
     return product;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: number, updateProductDto: UpdateProductDto, user: any) {
     const product = await
       this.findOne(id);
+    if (product.user?.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak!');
+    }
     const updatedProduct = this.productRepository.merge(product, updateProductDto);
     await
       this.productRepository.save(updatedProduct);
@@ -66,13 +82,48 @@ export class ProductsService {
     };
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, user: any) {
+    const product = await
+      this.findOne(id);
+    if (product.user?.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak!')
+    }
     await
-      this.productRepository.delete(id);
+      this.productRepository.softDelete(id);
 
     return {
       message: `Barang dengan ID ${id} berhasil dihapus dari database!`
+    };
+  }
+
+  async updateImage(id: number, filename: string, user: any) {
+    const product = await
+      this.findOne(id);
+    if (product.user?.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
+    }
+    product.image = `/uploads/products/${filename}`;
+    await this.productRepository.save(product);
+    return {
+      message: 'Foto produk berhasil diunggah!',
+      imageUrl: product.image,
+    };
+  }
+  async restore(id: number, user: any) {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: { user: true },
+      withDeleted: true,
+    });
+    if (!product) {
+      throw new NotFoundException(`Barang dengan ID ${id} tidak ditemukan`);
+    }
+    if (product.user?.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak');
+    }
+    await this.productRepository.restore(id);
+    return {
+      message: `Barang dengan ID ${id} berhasil dipulihkan kembali ke toko!`,
     };
   }
 }
