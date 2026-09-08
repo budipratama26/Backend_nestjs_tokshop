@@ -60,3 +60,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.sqlite3
 *.db
 *.better-sqlite3
+
+#log
+*.tsbuildinfo
