@@ -47,7 +47,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ObserveModule.forRoot({
       appKey: 'DijCBdYxSmPfFDFr',
       appSecret: process.env.APP_SECRET || '',
-      serviceId: 'belajar1',
+      serviceId: 'Be-nestjs',
     }),
 
     TypeOrmModule.forRoot({
