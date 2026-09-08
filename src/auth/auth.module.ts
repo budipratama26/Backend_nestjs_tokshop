@@ -9,7 +9,7 @@ import { UsersModule } from '../users//users.module.js';
     UsersModule,
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'penguin',
+      secret: process.env.JWT_SECRET,
       signOptions: {expiresIn:'1d'},
     }),
   ],

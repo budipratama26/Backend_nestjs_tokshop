@@ -1,15 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule, ObserveInstrument } from './app.module.js';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Version } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { TransformInterceptor } from './common/transform.inceptor.js';
+import { Logger } from 'nestjs-pino';
+import { VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    instrument: ObserveInstrument,
+    instrument: ObserveInstrument, bufferLogs: true
   });
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
+  app.useLogger(app.get(Logger));
 
   app.use(helmet({ contentSecurityPolicy: false, }));
 

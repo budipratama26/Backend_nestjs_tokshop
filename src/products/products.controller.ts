@@ -13,7 +13,7 @@ import { extname } from 'path';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Products')
-@Controller('products')
+@Controller({ path: 'products', version: '1' })
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
 
