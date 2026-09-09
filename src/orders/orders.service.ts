@@ -24,16 +24,24 @@ export class OrdersService {
           id:
             CreateOrderDto.productId
         },
+        relations: { user: true },
       });
       if (!product) {
         throw new NotFoundException(`Produk dengan ID ${CreateOrderDto.productId} tidak ditemukan!`);
       }
-      if (product.quantity < CreateOrderDto.quantity) {
-        throw new BadRequestException(`Stok tidak mencukupi! Sisa stok saat ini ${product.quantity}`);
+      if (product.user?.id === user.sub) {
+        throw new BadRequestException('Anda tidak dapat membeli produk dari toko Anda sendiri!');
       }
-      product.quantity -= CreateOrderDto.quantity;
-      await manager.save(Product, product);
+      const updateResult = await manager.createQueryBuilder().update(Product).set({ quantity: () => `quantity -${CreateOrderDto.quantity}` })
+        .where('id = :id AND quantity >= :quantity', {
+          id: product.id,
+          quantity: CreateOrderDto.quantity,
+        })
+        .execute();
 
+      if (updateResult.affected === 0) {
+        throw new BadRequestException('Stok produk tidak mencukupi atau barang baru saja habis!');
+      }
 
       const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -56,7 +64,7 @@ export class OrdersService {
           productName: product.name,
           quantity: newOrder.quantity,
           totalPrice: newOrder.totalPrice,
-          remainingStock: product.quantity,
+          remainingStock: product.quantity - CreateOrderDto.quantity,
         },
       };
     });
