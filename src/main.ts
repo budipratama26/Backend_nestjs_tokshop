@@ -7,16 +7,22 @@ import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { TransformInterceptor } from './common/transform.inceptor.js';
 import { Logger } from 'nestjs-pino';
 import { VersioningType } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     instrument: ObserveInstrument, bufferLogs: true
   });
 
+  app.use(json({ limit: '1mb'}));
+
+  app.use(urlencoded({ extended: true, limit: '1mb'}));
+
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
+
   app.enableShutdownHooks();
 
   app.useLogger(app.get(Logger));
@@ -41,7 +47,9 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true,
   }));
+
   app.useGlobalFilters(new HttpExceptionFilter());
+  
   app.useGlobalInterceptors(new TransformInterceptor());
 
   const config = new DocumentBuilder()

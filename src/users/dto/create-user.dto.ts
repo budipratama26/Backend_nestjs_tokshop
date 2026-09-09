@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, MinLength, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, MinLength, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -18,6 +18,6 @@ export class CreateUserDto {
 
     @ApiProperty({ example: 'seller', description: 'Role user: customer atau seller', required: false })
     @IsOptional()
-    @IsString()
+    @IsIn(['customer','seller'], {message:'Role hanya boleh customer atau seller!'})
     role?: string;
 }
