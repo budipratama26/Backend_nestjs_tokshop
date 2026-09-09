@@ -44,8 +44,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   const config = new DocumentBuilder()
-    .setTitle('Toksop API')
-    .setDescription('Dokumentasi Backend toksop clone - enterprise arcitecture')
+    .setTitle('Tokshop API')
+    .setDescription('Dokumentasi Backend tokshop clone - enterprise arcitecture')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
