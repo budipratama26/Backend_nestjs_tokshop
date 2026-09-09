@@ -14,6 +14,8 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import Joi from 'joi';
 import { LoggerModule } from 'nestjs-pino';
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthController } from './health.controller.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -62,13 +64,14 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     UsersModule,
     AuthModule,
     OrdersModule,
+    TerminusModule,
 
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
     {
