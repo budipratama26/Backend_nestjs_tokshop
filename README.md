@@ -1,5 +1,7 @@
 # TokShop Backend API
 
+[![CI](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml/badge.svg)](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml)
+
 A production-ready e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed with strict security practices, role-based access control (RBAC), database migrations, and containerization.
 
 ---
@@ -7,16 +9,17 @@ A production-ready e-commerce RESTful API built with **NestJS**, **TypeORM**, an
 ## 🛠 Tech Stack & Architecture
 
 - **Framework:** NestJS (Node.js & TypeScript, ES Modules)
-- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM
+- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM (Automated Migrations & Indexes)
+- **Transactions:** ACID Database Transactions via `DataSource.transaction` (Atomic checkout & stock management)
 - **Authentication:** JWT (JSON Web Token) + `bcrypt` password hashing
 - **Authorization:** Role-Based Access Control (RBAC) with custom `@Roles()` decorator and `RolesGuard` (Admin, Seller, Customer)
 - **Validation:** `class-validator` & `class-transformer` (DTO whitelisting) + `Joi` schema validation for `.env` fail-fast startup
 - **Security:** `helmet` headers, CORS enabled, `@nestjs/throttler` (Rate limiting), Anti-IDOR ownership verification
-- **Logging:** Structured logging using `nestjs-pino` & `pino-pretty`
+- **Observability:** Structured logging (`nestjs-pino`), Health Checks (`@nestjs/terminus`), and NestJS Observe
 - **File Handling:** Secure file upload using `Multer` with extension & size validation
 - **Documentation:** Swagger OpenAPI (`/api`)
 - **API Versioning:** URI Versioning (`/v1/...`)
-- **Containerization:** Multi-stage `Dockerfile` (Node 22 Alpine)
+- **Containerization & CI:** Multi-stage `Dockerfile` with native `HEALTHCHECK` + GitHub Actions CI Pipeline
 - **Test Runner:** `vitest` + `@nestjs/testing`
 
 ---
@@ -122,7 +125,8 @@ All endpoints are prefixed with `/v1/`.
 | `POST` | `/v1/products` | Create product (supports image upload) | Seller Only |
 | `PATCH` | `/v1/products/:id` | Update product (Anti-IDOR protected) | Owner Seller |
 | `DELETE` | `/v1/products/:id` | Soft delete product | Owner Seller |
-| `POST` | `/v1/orders` | Create an order | Authenticated |
+| `GET` | `/health` | Health check probe (database & server status) | Public |
+| `POST` | `/v1/orders` | Create an order (ACID Transaction) | Authenticated |
 | `GET` | `/v1/orders` | List user orders | Authenticated |
 
 ---
