@@ -140,8 +140,9 @@ All endpoints are prefixed with `/v1/`.
 | `PATCH` | `/v1/products/:id` | Update product (Anti-IDOR protected) | Owner Seller |
 | `DELETE` | `/v1/products/:id` | Soft delete product | Owner Seller |
 | `GET` | `/health` | Health check probe (database & server status) | Public |
-| `POST` | `/v1/orders` | Create an order (ACID Transaction) | Authenticated |
-| `GET` | `/v1/orders` | List user orders | Authenticated |
+| `POST` | `/v1/orders` | Create an order with unique invoice (ACID Transaction) | Authenticated |
+| `GET` | `/v1/orders/my-orders` | List current user order history | Authenticated |
+| `GET` | `/v1/orders/:orderNumber` | Get order detail by invoice (Anti-IDOR protected) | Authenticated (Owner) |
 
 ---
 
