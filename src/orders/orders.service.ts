@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Not } from 'typeorm';
 import { Order } from './entities/order.entity.js';
 import { Product } from '../products/entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,8 +33,15 @@ export class OrdersService {
       }
       product.quantity -= CreateOrderDto.quantity;
       await manager.save(Product, product);
+
+
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const orderNumber = `INV-${today}-${randomCode}`;
+
       const totalPrice = product.price * CreateOrderDto.quantity;
       const newOrder = manager.create(Order, {
+        orderNumber: orderNumber,
         quantity: CreateOrderDto.quantity,
         totalPrice: totalPrice,
         user: { id: user.sub },
@@ -44,14 +51,31 @@ export class OrdersService {
       return {
         message: 'Transaksi berhasil! Pesanan anda telah dibuat',
         data: {
+          orderNumber: newOrder.orderNumber,
           orderId: newOrder.id,
           productName: product.name,
           quantity: newOrder.quantity,
-          totalPrice: newOrder.totalPrice, 
+          totalPrice: newOrder.totalPrice,
           remainingStock: product.quantity,
         },
       };
     });
+  }
+  async findByOrderNumber(orderNumber: string, user: any) {
+    const order = await this.orderRepository.findOne({
+      where: { orderNumber },
+      relations: {
+        product: true,
+        user: true
+      },
+    });
+    if (!order) {
+      throw new NotFoundException(`Pesanan dengan nomor ${orderNumber} tidak ditemukan!`);
+    }
+    if (order.user.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak!')
+    }
+    return order;
   }
   async findMyOrders(user: any) {
     return await this.orderRepository.find({

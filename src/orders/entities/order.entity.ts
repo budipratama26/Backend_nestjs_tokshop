@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateColumn, type Relation } from 'typeorm';
 import { User } from '../../users/entities/user.entity.js';
 import { Product } from '../../products/entities/product.entity.js';
 
@@ -6,6 +6,10 @@ import { Product } from '../../products/entities/product.entity.js';
 export class Order {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Index({ unique: true })
+    @Column('varchar', { unique: true })
+    orderNumber: string;
 
     @Column()
     quantity: number;

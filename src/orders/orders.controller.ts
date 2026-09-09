@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Param } from '@nestjs/common';
 import { OrdersService } from './orders.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { AuthGuard } from '../auth/auth.guard.js';
@@ -21,5 +21,11 @@ export class OrdersController {
   @Get('my-orders')
   findMyOrders(@Req() req: any) {
     return this.ordersService.findMyOrders(req.user);
+  }
+  @ApiOperation({summary:'Melihat detail pesanan berdasarkan Nomor Invoice'})
+  @Get(':orderNumber')
+
+  findByOrderNumber(@Param('orderNumber') orderNumber: string, @Req() req: any) {
+    return this.ordersService.findByOrderNumber(orderNumber, req.user);
   }
 }
