@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, type Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index, type Relation } from 'typeorm';
 import { User } from '../../users/entities/user.entity.js';
 
 @Entity()
 export class Product {
     @PrimaryGeneratedColumn()
     id: number;
+    @Index()
     @Column()
     name: string;
     @Column('decimal')
@@ -15,6 +16,7 @@ export class Product {
     image: string;
     @Column('text')
     description: string;
+    @Index()
     @CreateDateColumn()
     createdAt: Date;
     @UpdateDateColumn()
