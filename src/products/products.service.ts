@@ -48,7 +48,7 @@ export class ProductsService {
       items: products,
       meta: {
         totalItems: total,
-        curretPage: page,
+        currentPage: page,
         itemsPerPage: limit,
         totalPages: Math.ceil(total / limit),
       },
