@@ -8,6 +8,8 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
+    "seed": "npx tsx seed.ts",
+    "seed:clear": "npx tsx seed.ts --clear",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

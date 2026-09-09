@@ -2,14 +2,14 @@
 
 [![CI](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml/badge.svg)](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml)
 
-A production-ready e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed with strict security practices, role-based access control (RBAC), database migrations, and containerization.
+A production-grade e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed with strict security practices, role-based access control (RBAC), database migrations, and containerization.
 
 ---
 
 ## 🛠 Tech Stack & Architecture
 
 - **Framework:** NestJS (Node.js & TypeScript, ES Modules)
-- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM (Automated Migrations & Indexes)
+- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM (Automated Migrations, Indexes, & Database Seeder)
 - **Transactions:** ACID Database Transactions via `DataSource.transaction` (Atomic checkout & stock management)
 - **Authentication:** JWT (JSON Web Token) + `bcrypt` password hashing
 - **Authorization:** Role-Based Access Control (RBAC) with custom `@Roles()` decorator and `RolesGuard` (Admin, Seller, Customer)
@@ -73,7 +73,21 @@ Run the existing migrations to build the SQLite schema:
 npx tsx ./node_modules/typeorm/cli.js migration:run -d data-source.ts
 ```
 
-### 4. Running the App
+### 4. Database Seeding (Optional Demo Data)
+Populate the database with sample products and demo user accounts:
+```bash
+# Seed demo accounts and catalog products
+npm run seed
+
+# Clear / rollback all seeded data
+npm run seed:clear
+```
+
+**Pre-configured Demo Accounts:**
+- **Seller:** `seller@tokshop.com` | Password: `password123`
+- **Customer:** `customer@tokshop.com` | Password: `password123`
+
+### 5. Running the App
 
 ```bash
 # Development mode (watch)
