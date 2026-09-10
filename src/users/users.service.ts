@@ -13,7 +13,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) { }
   async create(createUserDto: CreateUserDto) {
-    const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
+    const existingUser = await this.usersRepository.findOne({ where: { email: createUserDto.email }, withDeleted: true, 
+    });
     if (existingUser) {
       throw new BadRequestException('Email sudah terdaftar!');
     }
@@ -87,7 +88,7 @@ export class UsersService {
 
   async remove(id: number) {
     await this.findOne(id);
-    await this.usersRepository.delete(id);
+    await this.usersRepository.softDelete(id);
     return { message: `User dengan ID ${id} berhasil di hapus` };
   }
 }

@@ -6,6 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QueryProductDto } from './dto/query-product.dto.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
+import { join } from 'node:path';
+import * as fs from 'node:fs';
 
 @Injectable()
 export class ProductsService {
@@ -95,17 +97,33 @@ export class ProductsService {
   }
 
   async updateImage(id: number, filename: string, user: JwtPayload) {
-    const product = await
-      this.findOne(id);
-    if (product.user?.id !== user.sub) {
-      throw new ForbiddenException('Akses ditolak');
+    const newFilePath = join(process.cwd(), 'uploads/products', filename);
+    try {
+      const product = await
+        this.findOne(id);
+      if (product.user?.id !== user.sub) {
+        throw new ForbiddenException('Akses ditolak');
+      }
+      if (product.image) {
+        const oldFilePath = join(process.cwd(), product.image);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+
+      product.image = `/uploads/products/${filename}`;
+      await this.productRepository.save(product);
+
+      return {
+        message: 'Foto produk berhasil diunggah!',
+        imageUrl: product.image,
+      };
+    } catch (error) {
+      if (fs.existsSync(newFilePath)) {
+        fs.unlinkSync(newFilePath);
+      }
+      throw error;
     }
-    product.image = `/uploads/products/${filename}`;
-    await this.productRepository.save(product);
-    return {
-      message: 'Foto produk berhasil diunggah!',
-      imageUrl: product.image,
-    };
   }
   async restore(id: number, user: JwtPayload) {
     const product = await this.productRepository.findOne({

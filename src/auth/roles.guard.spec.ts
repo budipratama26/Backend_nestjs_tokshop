@@ -40,7 +40,7 @@ describe('RolesGuard', () => {
     });
     it('harus mengizinkan akses (true) jika role user sesuai', () => {
         vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['seller']);
-        const context = createMockContext({ sub: 1, role: 'seller'});
+        const context = createMockContext({ sub: 1, role: 'seller' });
 
         expect(guard.canActivate(context)).toBe(true);
     });

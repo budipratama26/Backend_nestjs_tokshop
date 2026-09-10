@@ -64,12 +64,12 @@ describe('OrdersService', () => {
             email: 'buyer@tokshop.com',
             role: 'customer'
         };
-        
+
         const createDto = { productId: 1, quantity: 2 };
 
         it('harus melempar NotFoundException jika produk tidak ditemukan', async () => {
             mockEntityManager.findOne.mockResolvedValue(null);
-            await expect(service.create(createDto,buyer)).rejects.toThrow(NotFoundException);
+            await expect(service.create(createDto, buyer)).rejects.toThrow(NotFoundException);
         });
 
         it('harus melempar BadRequestException jika seller membeli produk dari tokonya sendiri', async () => {

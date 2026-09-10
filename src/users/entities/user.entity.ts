@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, type Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, DeleteDateColumn, type Relation } from 'typeorm';
 import { Product } from '../../products/entities/product.entity.js';
 
 @Entity()
@@ -17,6 +17,9 @@ export class User {
 
     @Column({ default: 'customer' })
     role: string;
+
+    @DeleteDateColumn()
+    deletedAt: Date;
 
     @OneToMany(() => Product, (product) => product.user)
     products: Relation<Product[]>;

@@ -54,8 +54,9 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  @ApiOperation({ summary: 'Melihat profil satu user' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Melihat profil satu user (hanya admin)' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);

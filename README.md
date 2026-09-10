@@ -131,24 +131,35 @@ All endpoints are prefixed with `/v1/`.
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| `POST` | `/v1/auth/login` | Login and receive JWT access token | Public |
+| `POST` | `/v1/auth/login` | Login and receive JWT access token (Anti-Timing Attack) | Public |
 | `POST` | `/v1/users` | Register a new user (`customer` / `seller`) | Public |
-| `GET` | `/v1/users/:id` | Get user profile | Authenticated |
+| `GET` | `/v1/users/me` | Get current user profile (Anti-IDOR) | Authenticated |
+| `PATCH` | `/v1/users/me` | Update current user profile name | Authenticated |
+| `DELETE` | `/v1/users/me` | Soft delete own user account | Authenticated |
+| `GET` | `/v1/users` | List all users | Admin Only |
+| `GET` | `/v1/users/:id` | Get user profile by ID | Admin Only |
 | `GET` | `/v1/products` | Get products (with pagination, sort, search) | Public |
 | `GET` | `/v1/products/:id` | Get product detail | Public |
-| `POST` | `/v1/products` | Create product (supports image upload) | Seller Only |
+| `POST` | `/v1/products` | Create product | Seller Only |
 | `PATCH` | `/v1/products/:id` | Update product (Anti-IDOR protected) | Owner Seller |
 | `DELETE` | `/v1/products/:id` | Soft delete product | Owner Seller |
+| `POST` | `/v1/products/:id/image` | Upload product image (Multer extension whitelist & cleanup) | Owner Seller |
+| `PATCH` | `/v1/products/:id/restore` | Restore soft-deleted product | Owner Seller |
 | `GET` | `/health` | Health check probe (database & server status) | Public |
-| `POST` | `/v1/orders` | Create an order with unique invoice (ACID Transaction) | Authenticated |
-| `GET` | `/v1/orders/my-orders` | List current user order history | Authenticated |
+| `POST` | `/v1/orders` | Create an order with unique invoice (ACID Transaction & Stock Decrement) | Authenticated |
+| `GET` | `/v1/orders/my-orders` | List current user order history (Sorted DESC) | Authenticated |
 | `GET` | `/v1/orders/:orderNumber` | Get order detail by invoice (Anti-IDOR protected) | Authenticated (Owner) |
 
 ---
 
 ## 🧪 Testing
 
-Unit tests are written using `vitest` and `@nestjs/testing`:
+Unit tests are written using `vitest` and `@nestjs/testing` (18 passing tests across 5 test suites):
+- `RolesGuard` (RBAC authorization status codes 401 & 403)
+- `AuthService` (Login payload, timing attack defense, and credential validation)
+- `ProductsService` (CRUD, Anti-IDOR, and search pagination)
+- `OrdersService` (Atomic transaction stock decrement, self-deal prevention, and invoice lookup)
+- `AppController` (Bootstrap health check)
 
 ```bash
 # Run unit tests

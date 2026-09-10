@@ -80,13 +80,20 @@ export class ProductsController {
         destination: './uploads/products',
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
+          const ext = extname(file.originalname).toLowerCase();
           callback(null, `product-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-          return callback(new BadRequestException('Format file tidak didukung! hanya boleh JPG, JPEG, PNG, WEBP'), false);
+        const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+        const ext = extname(file.originalname).toLowerCase();
+        const isMimeValid = file.mimetype.match(/\/(jpg|jpeg|png|webp)$/);
+
+        if (!isMimeValid || !allowedExts.includes(ext)) {
+          return callback(
+            new BadRequestException('Format file tidak didukung! Hanya boleh JPG, JPEG, PNG, WEBP'),
+            false,
+          );
         }
         callback(null, true);
       },

@@ -12,9 +12,6 @@ export class OrdersService {
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
 
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-
     private dataSource: DataSource,
   ) { }
 
@@ -93,6 +90,7 @@ export class OrdersService {
     return await this.orderRepository.find({
       where: { user: { id: user.sub } },
       relations: { product: true },
+      order: { createdAt: 'DESC' },
     });
   }
 }
