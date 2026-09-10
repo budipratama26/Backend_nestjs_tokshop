@@ -1,4 +1,4 @@
-import { UseInterceptors, UploadedFile, BadRequestException, Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { UseInterceptors, UploadedFile, BadRequestException, Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
@@ -11,6 +11,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/current-user.decorator.js';
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 
 @ApiTags('Products')
 @Controller({ path: 'products', version: '1' })
@@ -22,8 +24,8 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Post()
-  create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
-    return this.productsService.create(createProductDto, req.user);
+  create(@Body() createProductDto: CreateProductDto, @CurrentUser() user: JwtPayload) {
+    return this.productsService.create(createProductDto, user);
   }
 
   @ApiOperation({ summary: 'Melihat semua katalog produk (Dengan Pencarian & Pagination' })
@@ -43,8 +45,8 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @Req() req: any) {
-    return this.productsService.update(+id, updateProductDto, req.user);
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @CurrentUser() user: JwtPayload) {
+    return this.productsService.update(+id, updateProductDto, user);
   }
 
   @ApiBearerAuth()
@@ -52,8 +54,8 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: any,) {
-    return this.productsService.remove(+id, req.user);
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload,) {
+    return this.productsService.remove(+id, user);
   }
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload foto produk (Hanya Seller pemilik produk' })
@@ -96,19 +98,19 @@ export class ProductsController {
   uploadImage(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
+    @CurrentUser() user: JwtPayload,
   ) {
     if (!file) {
       throw new BadRequestException('File gambar wajib diunggah!');
     }
-    return this.productsService.updateImage(+id, file.filename, req.user);
+    return this.productsService.updateImage(+id, file.filename, user);
   }
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Memulihkan produk yang pernah di hapus (Restore)' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Patch(':id/restore')
-  restore(@Param('id') id: string, @Req() req: any) {
-    return this.productsService.restore(+id, req.user);
+  restore(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.productsService.restore(+id, user);
   }
 }

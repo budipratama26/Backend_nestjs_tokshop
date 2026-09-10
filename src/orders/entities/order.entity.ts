@@ -14,8 +14,14 @@ export class Order {
     @Column()
     quantity: number;
 
+    @Column('decimal', { default: 0 })
+    unitPrice: number;
+
     @Column()
     totalPrice: number;
+
+    @Column({ default: 'PAID' })
+    status: string;
 
     @ManyToOne(() => User)
     user: User;

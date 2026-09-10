@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { OrdersService } from './orders.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/current-user.decorator.js';
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -13,19 +15,19 @@ export class OrdersController {
 
   @ApiOperation({ summary: 'Checkout / Beli produk (Customer)' })
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto, @Req() req: any) {
-    return this.ordersService.create(createOrderDto, req.user);
+  create(@Body() createOrderDto: CreateOrderDto, @CurrentUser() user: JwtPayload) {
+    return this.ordersService.create(createOrderDto, user);
   }
 
   @ApiOperation({ summary: 'Melihat riwayat belanjaan saya' })
   @Get('my-orders')
-  findMyOrders(@Req() req: any) {
-    return this.ordersService.findMyOrders(req.user);
+  findMyOrders(@CurrentUser() user: JwtPayload) {
+    return this.ordersService.findMyOrders(user);
   }
-  @ApiOperation({summary:'Melihat detail pesanan berdasarkan Nomor Invoice'})
+  @ApiOperation({ summary: 'Melihat detail pesanan berdasarkan Nomor Invoice' })
   @Get(':orderNumber')
 
-  findByOrderNumber(@Param('orderNumber') orderNumber: string, @Req() req: any) {
-    return this.ordersService.findByOrderNumber(orderNumber, req.user);
+  findByOrderNumber(@Param('orderNumber') orderNumber: string, @CurrentUser() user: JwtPayload) {
+    return this.ordersService.findByOrderNumber(orderNumber, user);
   }
 }

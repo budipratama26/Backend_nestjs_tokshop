@@ -9,15 +9,15 @@ export class User {
     @Column()
     name: string;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     email: string;
 
-    @Column({ select: false})
+    @Column({ select: false })
     password: string;
 
-    @Column({ default: 'customer'})
+    @Column({ default: 'customer' })
     role: string;
 
-    @OneToMany(()=> Product,(product)=>product.user)
+    @OneToMany(() => Product, (product) => product.user)
     products: Relation<Product[]>;
 }

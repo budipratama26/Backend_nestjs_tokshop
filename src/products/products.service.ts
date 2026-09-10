@@ -5,6 +5,7 @@ import { Product } from './entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QueryProductDto } from './dto/query-product.dto.js';
+import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Injectable()
 export class ProductsService {
@@ -12,10 +13,7 @@ export class ProductsService {
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
   ) { }
-
-  private products: Product[] = [];
-
-  async create(createProductDto: CreateProductDto, user: any) {
+  async create(createProductDto: CreateProductDto, user: JwtPayload) {
     const newProduct =
       this.productRepository.create({ ...createProductDto, user: { id: user.sub }, });
     await
@@ -67,7 +65,7 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto, user: any) {
+  async update(id: number, updateProductDto: UpdateProductDto, user: JwtPayload) {
     const product = await
       this.findOne(id);
     if (product.user?.id !== user.sub) {
@@ -82,7 +80,7 @@ export class ProductsService {
     };
   }
 
-  async remove(id: number, user: any) {
+  async remove(id: number, user: JwtPayload) {
     const product = await
       this.findOne(id);
     if (product.user?.id !== user.sub) {
@@ -96,7 +94,7 @@ export class ProductsService {
     };
   }
 
-  async updateImage(id: number, filename: string, user: any) {
+  async updateImage(id: number, filename: string, user: JwtPayload) {
     const product = await
       this.findOne(id);
     if (product.user?.id !== user.sub) {
@@ -109,7 +107,7 @@ export class ProductsService {
       imageUrl: product.image,
     };
   }
-  async restore(id: number, user: any) {
+  async restore(id: number, user: JwtPayload) {
     const product = await this.productRepository.findOne({
       where: { id },
       relations: { user: true },

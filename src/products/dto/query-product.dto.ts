@@ -1,4 +1,4 @@
-import { IsOptional, IsPositive, IsString, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -6,16 +6,19 @@ export class QueryProductDto {
     @ApiPropertyOptional({ example: 1, description: 'Halaman ke berapa' })
     @IsOptional()
     @Type(() => Number)
-    @IsPositive()
+    @IsInt({ message: 'Halaman (page) harus berupa bilangan bulat' })
+    @Min(1, { message: 'Halaman minimal 1' })
     page?: number = 1;
 
     @ApiPropertyOptional({ example: 10, description: 'Jumlah barang per halaman' })
     @IsOptional()
     @Type(() => Number)
-    @IsPositive()
+    @IsInt({ message: 'Jumlah (limit) harus berupa bilangan bulat' })
+    @Min(1, { message: 'Limit minimal 1' })
+    @Max(100, { message: 'Limit maksimal 100 barang per halaman' })
     limit?: number = 10;
 
-    @ApiPropertyOptional({ example: 'nike', description: 'Kata kunci pencarian nama atau deskripsi barang' })
+    @ApiPropertyOptional({ example: 'Iphone', description: 'Kata kunci pencarian nama atau deskripsi barang' })
     @IsOptional()
     @IsString()
     search?: string;

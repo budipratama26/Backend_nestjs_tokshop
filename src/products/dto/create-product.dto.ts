@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, Min, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -8,12 +8,11 @@ export class CreateProductDto {
     name: string;
 
     @ApiProperty({ example: 550000, description: 'Harga barang dalam rupiah' })
-    @IsNumber({}, { message: 'Harga harus berupa angka' })
     @Min(1000, { message: 'Harga tidak boleh minus' })
     price: number;
 
     @ApiProperty({ example: 50, description: 'Jumlah stok barang' })
-    @IsNumber({}, { message: 'Jumlah barang harus angka' })
+    @IsInt({ message: 'Jumlah stok barang harus berupa bilangan bulat' })
     @Min(1, { message: 'Kuatitas tidak boleh minus' })
     quantity: number;
 
