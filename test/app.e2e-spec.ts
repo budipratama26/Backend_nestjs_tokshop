@@ -15,6 +15,8 @@ describe('TokSHop API (E2E Workflow)', async () => {
   let testProductId: number;
   let testOrderNumber: string;
 
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'ci_test_jwt_secret_tokshop_2026';
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -41,7 +43,9 @@ describe('TokSHop API (E2E Workflow)', async () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   describe('1. Authentication Flow', () => {

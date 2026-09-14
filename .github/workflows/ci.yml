@@ -9,6 +9,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET:
+      ci_test_jwt_secret_tokshop_2026
+      NODE_ENV: test
 
     steps:
     - name: Checkout Code
