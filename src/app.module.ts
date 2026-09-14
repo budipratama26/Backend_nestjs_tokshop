@@ -62,7 +62,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       database: 'database.sqlite',
       autoLoadEntities: true,
       synchronize: false,
-      migrationsRun: true,
+      migrationsRun: process.env.NODE_ENV !== 'test',
       migrations: ['dist/migrations/*.js'],
     }),
     ProductsModule,
@@ -85,4 +85,4 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
