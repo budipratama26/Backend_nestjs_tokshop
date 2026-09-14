@@ -8,14 +8,19 @@ import {
 import { AppModule } from '../src/app.module.js';
 import request from 'supertest';
 import { TransformInterceptor } from '../src/common/transform.interceptor.js';
+import { DataSource } from 'typeorm';
+import { User, UserRole } from '../src/users/entities/user.entity.js';
+import { Product } from '../src/products/entities/product.entity.js';
 
 describe('TokSHop API (E2E Workflow)', async () => {
   let app: INestApplication;
+  let dataSource: DataSource;
   let customerToken: string;
   let testProductId: number;
   let testOrderNumber: string;
 
-  process.env.JWT_SECRET = process.env.JWT_SECRET || 'ci_test_jwt_secret_tokshop_2026';
+  process.env.JWT_SECRET =
+    process.env.JWT_SECRET || 'ci_test_jwt_secret_tokshop_2026';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,12 +44,39 @@ describe('TokSHop API (E2E Workflow)', async () => {
 
     app.useGlobalInterceptors(new TransformInterceptor());
 
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+
+    await dataSource.synchronize(true);
+
+    const userRepo = dataSource.getRepository(User);
+    const productRepo = dataSource.getRepository(Product);
+
+    const testSeller = await userRepo.save(
+      userRepo.create({
+        name: 'Seller E2E',
+        email: 'seller_e2e@tokshop.com',
+        password: 'password123',
+        role: UserRole.SELLER,
+      }),
+    );
+    await productRepo.save(
+      productRepo.create({
+        name: 'Produk E2E Test',
+        price: 50000,
+        quantity: 50,
+        description: 'Produk untuk testing e2e workflow',
+        user: testSeller,
+      }),
+    );
     await app.init();
   });
 
   afterAll(async () => {
     if (app) {
       await app.close();
+    }
+    if (dataSource && dataSource.isInitialized) {
+      await dataSource.destroy();
     }
   });
 
