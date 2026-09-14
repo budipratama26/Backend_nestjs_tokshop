@@ -2,6 +2,13 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, CreateDateCol
 import { User } from '../../users/entities/user.entity.js';
 import { Product } from '../../products/entities/product.entity.js';
 
+
+export enum OrderStatus {
+    PENDING = 'PENDING',
+    PAID = 'PAID',
+    CANCELLED = 'CANCELLED',
+}
+
 @Entity()
 export class Order {
     @PrimaryGeneratedColumn()
@@ -14,14 +21,14 @@ export class Order {
     @Column()
     quantity: number;
 
-    @Column('decimal', { default: 0 })
+    @Column('int', { default: 0 })
     unitPrice: number;
 
-    @Column()
+    @Column('int')
     totalPrice: number;
 
-    @Column({ default: 'PAID' })
-    status: string;
+    @Column({ type: 'varchar', default: OrderStatus.PAID })
+    status: OrderStatus;
 
     @ManyToOne(() => User)
     user: User;

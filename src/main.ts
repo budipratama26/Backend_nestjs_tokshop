@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
-import { TransformInterceptor } from './common/transform.inceptor.js';
+import { TransformInterceptor } from './common/transform.interceptor.js';
 import { Logger } from 'nestjs-pino';
 import { VersioningType } from '@nestjs/common';
 import { json, urlencoded } from 'express';
@@ -14,9 +14,9 @@ async function bootstrap() {
     instrument: ObserveInstrument, bufferLogs: true
   });
 
-  app.use(json({ limit: '1mb'}));
+  app.use(json({ limit: '1mb' }));
 
-  app.use(urlencoded({ extended: true, limit: '1mb'}));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
 
   app.enableVersioning({
     type: VersioningType.URI,
@@ -30,13 +30,9 @@ async function bootstrap() {
   app.use(helmet({ contentSecurityPolicy: false, }));
 
   app.enableCors();
-  //nanti ubah saat production contoh 
-  //app.enableCord({origin:['https://namadomain.apa','https://admin.domain.apa],
-  //credentials: true,
-  //});
 
   app.use((req: any, res: any, next: any) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate,');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     next();
@@ -54,7 +50,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Tokshop API')
-    .setDescription('Dokumentasi Backend tokshop clone - enterprise arcitecture')
+    .setDescription('E-Commerce RESTful API Portofolio - Concurrency, RBAC, Data Integrity, and Testing')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

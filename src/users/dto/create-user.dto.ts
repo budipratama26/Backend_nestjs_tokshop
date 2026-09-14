@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, MinLength, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -15,9 +15,4 @@ export class CreateUserDto {
     @IsString()
     @MinLength(8, { message: `password minimal 8 karakter` })
     password: string;
-
-    @ApiProperty({ example: 'seller', description: 'Role user: customer atau seller', required: false })
-    @IsOptional()
-    @IsIn(['customer','seller'], {message:'Role hanya boleh customer atau seller!'})
-    role?: string;
 }

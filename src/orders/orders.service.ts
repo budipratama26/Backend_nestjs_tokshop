@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { Repository, DataSource } from 'typeorm';
-import { Order } from './entities/order.entity.js';
+import { Order, OrderStatus } from './entities/order.entity.js';
 import { Product } from '../products/entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
@@ -30,7 +30,10 @@ export class OrdersService {
       if (product.user?.id === user.sub) {
         throw new BadRequestException('Anda tidak dapat membeli produk dari toko Anda sendiri!');
       }
-      const updateResult = await manager.createQueryBuilder().update(Product).set({ quantity: () => `quantity -${CreateOrderDto.quantity}` })
+      const updateResult = await manager
+        .createQueryBuilder()
+        .update(Product)
+        .set({ quantity: () => 'quantity - :quantity' })
         .where('id = :id AND quantity >= :quantity', {
           id: product.id,
           quantity: CreateOrderDto.quantity,
@@ -50,7 +53,7 @@ export class OrdersService {
         quantity: CreateOrderDto.quantity,
         unitPrice: product.price,
         totalPrice: totalPrice,
-        status: 'PAID',
+        status: OrderStatus.PAID,
         user: { id: user.sub },
         product: { id: product.id },
       });
@@ -64,7 +67,7 @@ export class OrdersService {
           unitPrice: newOrder.unitPrice,
           quantity: newOrder.quantity,
           totalPrice: newOrder.totalPrice,
-          status: newOrder.status,
+          status: OrderStatus.PAID,
           remainingStock: product.quantity - CreateOrderDto.quantity,
         },
       };

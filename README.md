@@ -2,25 +2,22 @@
 
 [![CI](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml/badge.svg)](https://github.com/budipratama26/Backend_nestjs_tokshop/actions/workflows/ci.yml)
 
-A production-grade e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed with strict security practices, role-based access control (RBAC), database migrations, and containerization.
+TokShop is an e-commerce RESTful API built with **NestJS**, **TypeORM**, and **SQLite**. Designed as a backend engineering portfolio project showcasing solid backend fundamentals: modular architecture, Role-Based Access Control (RBAC), ACID database transactions, concurrent stock management, and comprehensive testing.
 
 ---
 
-## 🛠 Tech Stack & Architecture
+## 🛠️ Tech Stack & Key Architecture
 
-- **Framework:** NestJS (Node.js & TypeScript, ES Modules)
-- **Database & ORM:** SQLite (`better-sqlite3`) + TypeORM (Automated Migrations, Indexes, & Database Seeder)
-- **Transactions:** ACID Database Transactions via `DataSource.transaction` (Atomic checkout & stock management)
-- **Authentication:** JWT (JSON Web Token) + `bcrypt` password hashing
-- **Authorization:** Role-Based Access Control (RBAC) with custom `@Roles()` decorator and `RolesGuard` (Admin, Seller, Customer)
-- **Validation:** `class-validator` & `class-transformer` (DTO whitelisting) + `Joi` schema validation for `.env` fail-fast startup
-- **Security:** `helmet` headers, CORS enabled, `@nestjs/throttler` (Rate limiting), Anti-IDOR ownership verification
-- **Observability:** Structured logging (`nestjs-pino`), Health Checks (`@nestjs/terminus`), and NestJS Observe
-- **File Handling:** Secure file upload using `Multer` with extension & size validation
-- **Documentation:** Swagger OpenAPI (`/api`)
-- **API Versioning:** URI Versioning (`/v1/...`)
-- **Containerization & CI:** Multi-stage `Dockerfile` with native `HEALTHCHECK` + GitHub Actions CI Pipeline
-- **Test Runner:** `vitest` + `@nestjs/testing`
+- **Runtime & Framework:** Node.js, TypeScript (ES Modules), NestJS
+- **Database & ORM:** SQLite (`better-sqlite3`) with TypeORM (Migrations & Seeder)
+- **Transactions:** ACID Database Transactions via `DataSource.transaction` for atomic checkout and stock locking
+- **Authentication & Security:** Stateless JWT, `bcrypt` password hashing, and custom `AuthGuard`
+- **Authorization:** Role-Based Access Control (`RolesGuard`) supporting `admin`, `seller`, and `customer`
+- **Validation:** `class-validator` & `class-transformer` with strict DTO whitelisting
+- **File Storage:** Local multipart file upload with MIME type and extension whitelisting
+- **Testing:** Unit tests and E2E integration tests powered by **Vitest** and Supertest
+- **Documentation:** Interactive OpenAPI Swagger UI (`/api`)
+- **CI Pipeline:** GitHub Actions automated linting, unit testing, and production build checks
 
 ---
 
@@ -28,14 +25,16 @@ A production-grade e-commerce RESTful API built with **NestJS**, **TypeORM**, an
 
 ```text
 src/
-├── auth/            # Authentication, JWT strategy, login, and roles guard
-├── common/          # Global filters, interceptors, and custom decorators
+├── auth/            # JWT authentication, login service, and roles guard
+├── common/          # Global exception filters and response transform interceptors
 ├── migrations/      # TypeORM database migration files
-├── orders/          # Order management and transaction processing
-├── products/        # Product CRUD, upload interceptors, search & filter
-├── users/           # User registration and profile management
-├── app.module.ts    # Root application module with security & logging imports
-└── main.ts          # Application bootstrap with versioning, helmet, and swagger
+├── orders/          # Checkout transactions, order history, and invoice lookups
+├── products/        # Catalog browsing, search pagination, and image upload
+├── users/           # User registration, profile management, and admin user list
+├── app.module.ts    # Root application module
+└── main.ts          # Application bootstrap, URI versioning, and Swagger setup
+test/
+└── app.e2e-spec.ts  # End-to-end integration test suite
 ```
 
 ---
@@ -59,114 +58,124 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-Configure your environment variables in `.env`:
+Configure environment variables:
 ```env
 PORT=3000
 NODE_ENV=development
 JWT_SECRET=your_super_secret_jwt_key_here
 ```
-> **Note:** Application uses fail-fast startup validation with Joi. It will refuse to boot if `JWT_SECRET` is missing.
 
-### 3. Database Migration
-Run the existing migrations to build the SQLite schema:
+### 3. Run Database Migrations
+Build the SQLite database schema:
 ```bash
 npx tsx ./node_modules/typeorm/cli.js migration:run -d data-source.ts
 ```
 
-### 4. Database Seeding (Optional Demo Data)
-Populate the database with sample products and demo user accounts:
+### 4. Database Seeding (Demo Data)
+Populate demo user accounts and sample products:
 ```bash
-# Seed demo accounts and catalog products
+# Seed initial data (Admin, Seller, Customer, and sample products)
 npm run seed
 
-# Clear / rollback all seeded data
+# Rollback / clear seeded data
 npm run seed:clear
 ```
 
 **Pre-configured Demo Accounts:**
+- **Admin:** `admin@tokshop.com` | Password: `password123`
 - **Seller:** `seller@tokshop.com` | Password: `password123`
 - **Customer:** `customer@tokshop.com` | Password: `password123`
 
-### 5. Running the App
-
+### 5. Running the Application
 ```bash
 # Development mode (watch)
 npm run start:dev
 
-# Production build & run
+# Production build and run
 npm run build
 npm run start:prod
 ```
 
-API will be running on `http://localhost:3000`.
+Server runs on: `http://localhost:3000`  
+Swagger UI docs: `http://localhost:3000/api`
 
 ---
 
-## 🐳 Running with Docker
+## 📌 API Endpoints (v1)
 
-You can build and run the application inside a multi-stage Docker container:
+All endpoints are versioned with the `/v1/` URI prefix.
 
-```bash
-# Build image
-docker build -t tokshop-api .
-
-# Run container
-docker run -p 3000:3000 --env-file .env tokshop-api
-```
-
----
-
-## 📖 API Documentation (Swagger)
-
-Interactive Swagger documentation is available at:
-```text
-http://localhost:3000/api
-```
-
----
-
-## 📌 Key API Endpoints (v1)
-
-All endpoints are prefixed with `/v1/`.
-
+### Authentication & Users
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| `POST` | `/v1/auth/login` | Login and receive JWT access token (Anti-Timing Attack) | Public |
-| `POST` | `/v1/users` | Register a new user (`customer` / `seller`) | Public |
-| `GET` | `/v1/users/me` | Get current user profile (Anti-IDOR) | Authenticated |
-| `PATCH` | `/v1/users/me` | Update current user profile name | Authenticated |
-| `DELETE` | `/v1/users/me` | Soft delete own user account | Authenticated |
-| `GET` | `/v1/users` | List all users | Admin Only |
-| `GET` | `/v1/users/:id` | Get user profile by ID | Admin Only |
-| `GET` | `/v1/products` | Get products (with pagination, sort, search) | Public |
-| `GET` | `/v1/products/:id` | Get product detail | Public |
-| `POST` | `/v1/products` | Create product | Seller Only |
-| `PATCH` | `/v1/products/:id` | Update product (Anti-IDOR protected) | Owner Seller |
-| `DELETE` | `/v1/products/:id` | Soft delete product | Owner Seller |
-| `POST` | `/v1/products/:id/image` | Upload product image (Multer extension whitelist & cleanup) | Owner Seller |
-| `PATCH` | `/v1/products/:id/restore` | Restore soft-deleted product | Owner Seller |
-| `GET` | `/health` | Health check probe (database & server status) | Public |
-| `POST` | `/v1/orders` | Create an order with unique invoice (ACID Transaction & Stock Decrement) | Authenticated |
-| `GET` | `/v1/orders/my-orders` | List current user order history (Sorted DESC) | Authenticated |
-| `GET` | `/v1/orders/:orderNumber` | Get order detail by invoice (Anti-IDOR protected) | Authenticated (Owner) |
+| `POST` | `/v1/auth/login` | Authenticate user and receive JWT token | Public |
+| `POST` | `/v1/users` | Register a new customer account | Public |
+| `GET` | `/v1/users/me` | View authenticated user profile | Authenticated |
+| `PATCH` | `/v1/users/me` | Update authenticated user profile name | Authenticated |
+| `DELETE` | `/v1/users/me` | Soft-delete own account | Authenticated |
+| `GET` | `/v1/users` | List all registered users | Admin Only |
+| `GET` | `/v1/users/:id` | View user profile details by ID | Admin Only |
+
+### Products
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `GET` | `/v1/products` | Browse product catalog (search, sort, pagination) | Public |
+| `GET` | `/v1/products/:id` | View detailed product information | Public |
+| `POST` | `/v1/products` | Create a new product listing | Seller Only |
+| `PATCH` | `/v1/products/:id` | Update product details | Product Owner |
+| `DELETE` | `/v1/products/:id` | Soft-delete product listing | Product Owner |
+| `POST` | `/v1/products/:id/image` | Upload product display image | Product Owner |
+| `PATCH` | `/v1/products/:id/restore` | Restore soft-deleted product listing | Product Owner |
+
+### Orders & Checkout
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `POST` | `/v1/orders` | Checkout product with atomic stock decrement | Authenticated |
+| `GET` | `/v1/orders/my-orders` | View user purchase history | Authenticated |
+| `GET` | `/v1/orders/:orderNumber` | View order invoice details | Order Owner |
+
+> **Note on Payment Flow:** Payment processing is simulated for portfolio demonstration. Successful checkout automatically generates an invoice with `PAID` status inside an atomic database transaction.
+
+### System Health
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| `GET` | `/health` | System and SQLite connectivity health check probe | Public |
 
 ---
 
 ## 🧪 Testing
 
-Unit tests are written using `vitest` and `@nestjs/testing` (18 passing tests across 5 test suites):
-- `RolesGuard` (RBAC authorization status codes 401 & 403)
-- `AuthService` (Login payload, timing attack defense, and credential validation)
-- `ProductsService` (CRUD, Anti-IDOR, and search pagination)
-- `OrdersService` (Atomic transaction stock decrement, self-deal prevention, and invoice lookup)
-- `AppController` (Bootstrap health check)
+Testing is implemented with **Vitest** and **Supertest** covering both unit logic and end-to-end user workflows:
+
+- **Unit Tests (18 tests):** Validates individual services and guards (`RolesGuard`, `AuthService`, `ProductsService`, `OrdersService`, and `AppController`).
+- **E2E Integration Tests (6 tests):** Validates complete API lifecycles (`test/app.e2e-spec.ts`) covering user registration, JWT login, credential verification, public catalog queries, unauthorized request handling, and checkout transactions.
 
 ```bash
 # Run unit tests
 npm run test
 
+# Run E2E integration tests
+npm run test:e2e
+
 # Run tests with coverage report
 npm run test:cov
+
+# Run linter
+npm run lint
+```
+
+---
+
+## 🐳 Docker Deployment
+
+Build and run using containerization:
+
+```bash
+# Build multi-stage image
+docker build -t tokshop-api .
+
+# Run container
+docker run -p 3000:3000 --env-file .env tokshop-api
 ```
 
 ---

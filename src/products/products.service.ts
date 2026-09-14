@@ -33,7 +33,10 @@ export class ProductsService {
     const search = queryDto?.search;
     const sortBy = queryDto?.sortBy || 'id';
     const order = (queryDto?.order?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
-    const query = this.productRepository.createQueryBuilder('product').leftJoinAndSelect('product.user', 'user');
+    const query = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoin('product.user', 'user')
+      .addSelect(['user.id', 'user.name']);
     if (search) {
       query.where(
         'product.name LIKE :search OR product.description LIKE :search', { search: `%${search}%` },
@@ -60,6 +63,20 @@ export class ProductsService {
       this.productRepository.findOne({
         where: { id },
         relations: { user: true },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          quantity: true,
+          image: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            id: true,
+            name: true,
+          },
+        },
       });
     if (!product) {
       throw new NotFoundException(`Barang dengan ID ${id} tidak ditemukan`);

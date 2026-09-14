@@ -1,14 +1,16 @@
-import { IsString, IsNotEmpty, Min, IsInt } from 'class-validator';
+import { IsString, IsNotEmpty, Min, IsInt, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
     @ApiProperty({ example: 'Sepatu Sneakers Nike', description: 'Nama barang yang dijual' })
     @IsString()
     @IsNotEmpty({ message: 'Nama tidak boleh kosong' })
+    @Matches(/^[^<>]*$/, { message: 'Nama barang tidak boleh mengandung tag HTML atau script (< atau >)!' })
     name: string;
 
     @ApiProperty({ example: 550000, description: 'Harga barang dalam rupiah' })
-    @Min(1000, { message: 'Harga tidak boleh minus' })
+    @IsInt({ message: 'Harga barang harus berupa bilangan bulat dalam Rupiah' })
+    @Min(1000, { message: 'Harga minimal Rp 1.000' })
     price: number;
 
     @ApiProperty({ example: 50, description: 'Jumlah stok barang' })
@@ -16,7 +18,8 @@ export class CreateProductDto {
     @Min(1, { message: 'Kuatitas tidak boleh minus' })
     quantity: number;
 
-    @ApiProperty({ example: 'Sepatu senakers original nyaman dipakai', description: 'Deskripsi lengkap barang' })
+    @ApiProperty({ example: 'Sepatu sneakers original nyaman dipakai', description: 'Deskripsi lengkap barang' })
     @IsString()
+    @Matches(/^[^<>]*$/, { message: 'Deskripsi barang tidak boleh mengandung tag HTML atau script (< atau >)!' })
     description: string;
 }

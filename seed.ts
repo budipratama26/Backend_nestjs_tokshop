@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import dataSource from './data-source.js';
 import bcrypt from 'bcrypt';
-import { DatabaseSync } from 'node:sqlite';
 
 async function runSeed() {
     console.log('Starting database seeding...');
@@ -43,6 +42,14 @@ async function runSeed() {
     });
     await userRepo.save(customer);
 
+    const admin = userRepo.create({
+        name: 'Name Admin',
+        email: 'admin@tokshop.com',
+        password: hashedPassword,
+        role: 'admin',
+    });
+    await userRepo.save(admin);
+
     const sampleProduct = [
         productRepo.create({
             name: 'Apple Iphone 17',
@@ -69,9 +76,10 @@ async function runSeed() {
     await productRepo.save(sampleProduct);
     console.log('Seeding completed successfully!');
     console.log('--Akun Demo Siap Pakai--');
+    console.log('Admin      : admin@tokshop.com    | Password: password123');
     console.log('Seller     : seller@tokshop.com   | Password: password123');
     console.log('Customer   : customer@tokshop.com | Password: password123');
-    console.log('==========================================================');
+    console.log('=========================================================');
     await dataSource.destroy();
 }
 runSeed().catch((err) => {
