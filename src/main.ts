@@ -30,13 +30,14 @@ async function bootstrap() {
 
   app.use(helmet({ contentSecurityPolicy: false }));
 
-  const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()) : true;
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+    : true;
 
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
   });
-
 
   app.use((req: any, res: any, next: any) => {
     res.setHeader(

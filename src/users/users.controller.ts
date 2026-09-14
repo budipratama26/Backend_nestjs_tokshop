@@ -11,12 +11,18 @@ import {
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
+import { UserResponseDto } from './dto/user-response.dto.js';
 
 @ApiTags('Users')
 @Controller({ path: 'users', version: '1' })
@@ -24,6 +30,11 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Registrasi User baru (Customer / Seller)' })
+  @ApiResponse({
+    status: 201,
+    type: UserResponseDto,
+    description: 'User berhasil didaftarkan',
+  })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -40,6 +51,11 @@ export class UsersController {
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
+  @ApiResponse({
+    status: 200,
+    type: UserResponseDto,
+    description: 'Detail profil user',
+  })
   @ApiOperation({ summary: 'Melihat profil saya sendiri' })
   @Get('me')
   findMe(@CurrentUser() user: JwtPayload) {

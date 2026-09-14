@@ -8,6 +8,12 @@ import {
 } from 'typeorm';
 import { Product } from '../../products/entities/product.entity.js';
 
+export enum UserRole {
+  ADMIN = 'admin',
+  SELLER = 'seller',
+  CUSTOMER = 'customer',
+}
+
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -22,8 +28,8 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @Column({ default: 'customer' })
-  role: string;
+  @Column({ type: 'varchar', default: UserRole.CUSTOMER })
+  role: UserRole;
 
   @DeleteDateColumn()
   deletedAt: Date;

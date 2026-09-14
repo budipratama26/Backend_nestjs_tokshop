@@ -103,13 +103,18 @@ describe('OrdersService', () => {
     });
 
     it('harus berhasil checkout jika data valid dan stok mencukupi', async () => {
-      mockEntityManager.findOne.mockResolvedValue({
-        id: 1,
-        name: 'Sepatu',
-        price: 50000,
-        quantity: 10,
-        user: { id: 99 },
-      });
+      mockEntityManager.findOne
+        .mockResolvedValueOnce({
+          id: 1,
+          name: 'Sepatu',
+          price: 50000,
+          quantity: 10,
+          user: { id: 99 },
+        })
+        .mockResolvedValueOnce({
+          id: 1,
+          quantity: 8,
+        });
 
       mockQueryBuilder.execute.mockResolvedValue({ affected: 1 });
 

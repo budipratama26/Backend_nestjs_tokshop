@@ -6,7 +6,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity.js';
+import { User, UserRole } from './entities/user.entity.js';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -33,7 +33,7 @@ export class UsersService {
     const newUser = this.usersRepository.create({
       ...createUserDto,
       password: hashedPassword,
-      role: 'customer',
+      role: UserRole.CUSTOMER,
     });
 
     await this.usersRepository.save(newUser);

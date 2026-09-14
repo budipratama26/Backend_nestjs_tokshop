@@ -11,6 +11,7 @@ import { Product } from '../products/entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { randomBytes } from 'node:crypto';
+import { QueryOrderDto } from './dto/query-order.dto.js';
 
 @Injectable()
 export class OrdersService {
@@ -54,6 +55,10 @@ export class OrdersService {
           'Stok produk tidak mencukupi atau barang baru saja habis!',
         );
       }
+      const updatedProduct = await manager.findOne(Product, {
+        where: { id: product.id },
+        select: { quantity: true },
+      });
 
       const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const randomCode = randomBytes(3).toString('hex').toUpperCase();
@@ -79,7 +84,7 @@ export class OrdersService {
           quantity: newOrder.quantity,
           totalPrice: newOrder.totalPrice,
           status: OrderStatus.PAID,
-          remainingStock: product.quantity - CreateOrderDto.quantity,
+          remainingStock: updatedProduct?.quantity ?? 0,
         },
       };
     });
@@ -102,11 +107,24 @@ export class OrdersService {
     }
     return order;
   }
-  async findMyOrders(user: JwtPayload) {
-    return await this.orderRepository.find({
+  async findMyOrders(user: JwtPayload, queryOrderDto?: QueryOrderDto) {
+    const page = queryOrderDto?.page ?? 1;
+    const limit = queryOrderDto?.limit ?? 10;
+    const [orders, total] = await this.orderRepository.findAndCount({
       where: { user: { id: user.sub } },
       relations: { product: true },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return {
+      items: orders,
+      meta: {
+        totalItems: total,
+        currentPage: page,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

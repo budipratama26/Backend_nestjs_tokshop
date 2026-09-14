@@ -13,6 +13,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
   let app: INestApplication;
   let customerToken: string;
   let testProductId: number;
+  let testOrderNumber: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -115,6 +116,60 @@ describe('TokSHop API (E2E Workflow)', async () => {
       expect(response.body.data.data.orderNumber).toMatch(/^INV-/);
 
       expect(response.body.data.data.quantity).toBe(1);
+      testOrderNumber = response.body.data.data.orderNumber;
+    });
+    describe('3. Security, RBAC & Ownership flow', () => {
+      it('harus menolak (403) jika customer mengakses endpoint khusus admin (GET /v1/users/:id)', async () => {
+        await request(app.getHttpServer())
+          .get('/v1/users/1')
+          .set('Authorization', `Bearer ${customerToken}`)
+          .expect(403);
+      });
+      it('harus menolak (403) jika customer mencoba membuat produk baru (POST /v1/products)', async () => {
+        await request(app.getHttpServer())
+          .post('/v1/products')
+          .set('Authorization', `Bearer ${customerToken}`)
+          .send({
+            name: 'Produk Ilegal',
+            price: 10000,
+            quantity: 5,
+            description: 'Hanya seller yang boleh posting',
+          })
+          .expect(403);
+      });
+      it('harus menolak (403) jika customer lain mencoba mengintip invoice orang lain (GET /v1/orders/:orderNumber', async () => {
+        const otherEmail = `other_${Date.now()}@tokshop.com`;
+        await request(app.getHttpServer())
+          .post('/v1/users')
+          .send({
+            name: 'Customer Lain',
+            email: otherEmail,
+            password: 'password123',
+          })
+          .expect(201);
+
+        const loginRes = await request(app.getHttpServer())
+          .post('/v1/auth/login')
+          .send({
+            email: otherEmail,
+            password: 'password123',
+          })
+          .expect(201);
+
+        const otherToken = loginRes.body.data.access_token;
+
+        await request(app.getHttpServer())
+          .get(`/v1/orders/${testOrderNumber}`)
+          .set('Authorization', `Bearer ${otherToken}`)
+          .expect(403);
+      });
+      it('harus berhasil (200) jika customer pemilik sah melihat invoicenya sendiri (GET /v1/orders/:orderNumber)', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`/v1/orders/${testOrderNumber}`)
+          .set('Authorization', `Bearer ${customerToken}`)
+          .expect(200);
+        expect(response.body.data.orderNumber).toBe(testOrderNumber);
+      });
     });
   });
 });
