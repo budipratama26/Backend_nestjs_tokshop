@@ -11,11 +11,14 @@ import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 @UseGuards(AuthGuard)
 @Controller({ path: 'orders', version: '1' })
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @ApiOperation({ summary: 'Checkout / Beli produk (Customer)' })
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto, @CurrentUser() user: JwtPayload) {
+  create(
+    @Body() createOrderDto: CreateOrderDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.ordersService.create(createOrderDto, user);
   }
 
@@ -26,8 +29,10 @@ export class OrdersController {
   }
   @ApiOperation({ summary: 'Melihat detail pesanan berdasarkan Nomor Invoice' })
   @Get(':orderNumber')
-
-  findByOrderNumber(@Param('orderNumber') orderNumber: string, @CurrentUser() user: JwtPayload) {
+  findByOrderNumber(
+    @Param('orderNumber') orderNumber: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.ordersService.findByOrderNumber(orderNumber, user);
   }
 }

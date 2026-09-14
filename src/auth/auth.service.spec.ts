@@ -90,7 +90,10 @@ describe('AuthService', () => {
       ).rejects.toThrow(UnauthorizedException);
 
       // Verifikasi bahwa bcrypt.compare TETAP dipanggil dengan DUMMY_HASH
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', expect.stringContaining('$2b$10$'));
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'password123',
+        expect.stringContaining('$2b$10$'),
+      );
     });
 
     it('harus melempar UnauthorizedException jika password salah', async () => {

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -12,7 +21,7 @@ import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 @ApiTags('Users')
 @Controller({ path: 'users', version: '1' })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Registrasi User baru (Customer / Seller)' })
   @Post()
@@ -41,7 +50,10 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Update profil saya sendiri' })
   @Patch('me')
-  updateMe(@CurrentUser() user: JwtPayload, @Body() UpdateUserDto: UpdateUserDto) {
+  updateMe(
+    @CurrentUser() user: JwtPayload,
+    @Body() UpdateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(user.sub, UpdateUserDto);
   }
 

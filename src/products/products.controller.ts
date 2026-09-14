@@ -1,4 +1,17 @@
-import { UseInterceptors, UploadedFile, BadRequestException, Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
@@ -17,18 +30,23 @@ import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 @ApiTags('Products')
 @Controller({ path: 'products', version: '1' })
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) { }
+  constructor(private readonly productsService: ProductsService) {}
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Menambahkan produk baru (Hanya Seller)' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Post()
-  create(@Body() createProductDto: CreateProductDto, @CurrentUser() user: JwtPayload) {
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.productsService.create(createProductDto, user);
   }
 
-  @ApiOperation({ summary: 'Melihat semua katalog produk (Dengan Pencarian & Pagination' })
+  @ApiOperation({
+    summary: 'Melihat semua katalog produk (Dengan Pencarian & Pagination',
+  })
   @Get()
   findAll(@Query() query: QueryProductDto) {
     return this.productsService.findAll(query);
@@ -45,7 +63,11 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @CurrentUser() user: JwtPayload) {
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.productsService.update(+id, updateProductDto, user);
   }
 
@@ -54,7 +76,7 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('seller')
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload,) {
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.productsService.remove(+id, user);
   }
   @ApiBearerAuth()
@@ -79,7 +101,8 @@ export class ProductsController {
       storage: diskStorage({
         destination: './uploads/products',
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname).toLowerCase();
           callback(null, `product-${uniqueSuffix}${ext}`);
         },
@@ -91,7 +114,9 @@ export class ProductsController {
 
         if (!isMimeValid || !allowedExts.includes(ext)) {
           return callback(
-            new BadRequestException('Format file tidak didukung! Hanya boleh JPG, JPEG, PNG, WEBP'),
+            new BadRequestException(
+              'Format file tidak didukung! Hanya boleh JPG, JPEG, PNG, WEBP',
+            ),
             false,
           );
         }

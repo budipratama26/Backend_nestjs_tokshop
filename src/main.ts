@@ -11,7 +11,8 @@ import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    instrument: ObserveInstrument, bufferLogs: true
+    instrument: ObserveInstrument,
+    bufferLogs: true,
   });
 
   app.use(json({ limit: '1mb' }));
@@ -27,22 +28,33 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  app.use(helmet({ contentSecurityPolicy: false, }));
+  app.use(helmet({ contentSecurityPolicy: false }));
 
-  app.enableCors();
+  const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()) : true;
+
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
+
 
   app.use((req: any, res: any, next: any) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate',
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     next();
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
@@ -50,7 +62,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Tokshop API')
-    .setDescription('E-Commerce RESTful API Portofolio - Concurrency, RBAC, Data Integrity, and Testing')
+    .setDescription(
+      'E-Commerce RESTful API Portofolio - Concurrency, RBAC, Data Integrity, and Testing',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

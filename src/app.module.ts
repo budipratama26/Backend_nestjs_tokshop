@@ -35,16 +35,21 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
         PORT: Joi.number().default(3000),
         JWT_SECRET: Joi.string().required(),
+        CORS_ORIGIN: Joi.string().optional(),
       }),
     }),
 
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
 
     ObserveModule.forRoot({
       appKey: 'DijCBdYxSmPfFDFr',
@@ -58,7 +63,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       autoLoadEntities: true,
       synchronize: false,
       migrationsRun: true,
-      migrations: ['dist/migrations/*.js']
+      migrations: ['dist/migrations/*.js'],
     }),
     ProductsModule,
     UsersModule,
@@ -80,4 +85,4 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

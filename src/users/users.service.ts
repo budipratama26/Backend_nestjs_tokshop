@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { Repository } from 'typeorm';
@@ -11,17 +15,26 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) { }
+  ) {}
   async create(createUserDto: CreateUserDto) {
-    const existingUser = await this.usersRepository.findOne({ where: { email: createUserDto.email }, withDeleted: true, 
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: createUserDto.email },
+      withDeleted: true,
     });
     if (existingUser) {
       throw new BadRequestException('Email sudah terdaftar!');
     }
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
 
-    const newUser = this.usersRepository.create({ ...createUserDto, password: hashedPassword, role: 'customer', });
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+      role: 'customer',
+    });
 
     await this.usersRepository.save(newUser);
 
@@ -64,12 +77,11 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return await
-      this.usersRepository
-        .createQueryBuilder('user')
-        .addSelect('user.password')
-        .where('user.email = :email', { email })
-        .getOne();
+    return await this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -77,7 +89,8 @@ export class UsersService {
     const updatedUser = this.usersRepository.merge(user, updateUserDto);
     await this.usersRepository.save(updatedUser);
     return {
-      message: `User berhasil diperbarui`, data: {
+      message: `User berhasil diperbarui`,
+      data: {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,

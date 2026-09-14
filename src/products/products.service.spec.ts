@@ -16,14 +16,15 @@ describe('ProductsService', () => {
     softDelete: vi.fn(),
     restore: vi.fn(),
     createQueryBuilder: vi.fn(),
-  }
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProductsService,
+      providers: [
+        ProductsService,
         {
           provide: getRepositoryToken(Product),
-          useValue: mockRepository
+          useValue: mockRepository,
         },
       ],
     }).compile();
@@ -36,7 +37,12 @@ describe('ProductsService', () => {
   });
   describe('create', () => {
     it('should create a product', async () => {
-      const createDto: CreateProductDto = { name: 'Test Product', price: 10000, quantity: 5, description: 'Test description' };
+      const createDto: CreateProductDto = {
+        name: 'Test Product',
+        price: 10000,
+        quantity: 5,
+        description: 'Test description',
+      };
       const user = { sub: 1 };
       const expectedProduct = { id: 1, ...createDto, user: { id: 1 } };
       mockRepository.create.mockReturnValue(expectedProduct);
@@ -49,7 +55,10 @@ describe('ProductsService', () => {
         user: { id: 1 },
       });
       expect(mockRepository.save).toHaveBeenCalled();
-      expect(result).toEqual({ message: 'Barang telah di tambahkan', data:expectedProduct});
+      expect(result).toEqual({
+        message: 'Barang telah di tambahkan',
+        data: expectedProduct,
+      });
     });
   });
   describe('findOne', () => {

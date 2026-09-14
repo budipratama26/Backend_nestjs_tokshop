@@ -9,4 +9,4 @@ import { Product } from './entities/product.entity.js';
   controllers: [ProductsController],
   providers: [ProductsService],
 })
-export class ProductsModule { }
+export class ProductsModule {}

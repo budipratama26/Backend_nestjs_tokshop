@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { Repository, DataSource } from 'typeorm';
 import { Order, OrderStatus } from './entities/order.entity.js';
 import { Product } from '../products/entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
+import { randomBytes } from 'node:crypto';
 
 @Injectable()
 export class OrdersService {
@@ -13,22 +19,25 @@ export class OrdersService {
     private orderRepository: Repository<Order>,
 
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async create(CreateOrderDto: CreateOrderDto, user: JwtPayload) {
     return await this.dataSource.transaction(async (manager) => {
       const product = await manager.findOne(Product, {
         where: {
-          id:
-            CreateOrderDto.productId
+          id: CreateOrderDto.productId,
         },
         relations: { user: true },
       });
       if (!product) {
-        throw new NotFoundException(`Produk dengan ID ${CreateOrderDto.productId} tidak ditemukan!`);
+        throw new NotFoundException(
+          `Produk dengan ID ${CreateOrderDto.productId} tidak ditemukan!`,
+        );
       }
       if (product.user?.id === user.sub) {
-        throw new BadRequestException('Anda tidak dapat membeli produk dari toko Anda sendiri!');
+        throw new BadRequestException(
+          'Anda tidak dapat membeli produk dari toko Anda sendiri!',
+        );
       }
       const updateResult = await manager
         .createQueryBuilder()
@@ -41,11 +50,13 @@ export class OrdersService {
         .execute();
 
       if (updateResult.affected === 0) {
-        throw new BadRequestException('Stok produk tidak mencukupi atau barang baru saja habis!');
+        throw new BadRequestException(
+          'Stok produk tidak mencukupi atau barang baru saja habis!',
+        );
       }
 
       const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const randomCode = randomBytes(3).toString('hex').toUpperCase();
       const orderNumber = `INV-${today}-${randomCode}`;
       const totalPrice = product.price * CreateOrderDto.quantity;
       const newOrder = manager.create(Order, {
@@ -78,14 +89,16 @@ export class OrdersService {
       where: { orderNumber },
       relations: {
         product: true,
-        user: true
+        user: true,
       },
     });
     if (!order) {
-      throw new NotFoundException(`Pesanan dengan nomor ${orderNumber} tidak ditemukan!`);
+      throw new NotFoundException(
+        `Pesanan dengan nomor ${orderNumber} tidak ditemukan!`,
+      );
     }
     if (order.user.id !== user.sub) {
-      throw new ForbiddenException('Akses ditolak!')
+      throw new ForbiddenException('Akses ditolak!');
     }
     return order;
   }
