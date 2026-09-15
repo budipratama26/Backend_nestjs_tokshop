@@ -8,6 +8,7 @@ export class QueryProductDto {
   @Type(() => Number)
   @IsInt({ message: 'Halaman (page) harus berupa bilangan bulat' })
   @Min(1, { message: 'Halaman minimal 1' })
+  @Max(10000, { message: 'Halaman maksimal 10000' })
   page?: number = 1;
 
   @ApiPropertyOptional({
