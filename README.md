@@ -78,6 +78,9 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 # Security & Authentication
 JWT_SECRET=your_super_secret_jwt_key_here
 
+# Database Seeder (Password for demo accounts: Admin, Seller, Customer)
+SEED_PASSWORD=password123
+
 # Database Configuration (Default: better-sqlite3)
 DB_TYPE=better-sqlite3
 DB_DATABASE=database.sqlite
