@@ -107,7 +107,7 @@ export class ProductsController {
       },
     }),
   )
-  uploadImage(
+  async uploadImage(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: JwtPayload,
