@@ -136,6 +136,30 @@ describe('OrdersService', () => {
   });
 
   describe('findByOrderNumber', () => {
+    it('harus melempar NotFoundException jika format nomor invoice tidak valid', async () => {
+      const buyer: JwtPayload = {
+        sub: 1,
+        email: 'buyer@tokshop.com',
+        role: 'customer',
+      };
+      await expect(
+        service.findByOrderNumber('INV-INVALID', buyer),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('harus melempar NotFoundException jika pesanan tidak ditemukan', async () => {
+      const buyer: JwtPayload = {
+        sub: 1,
+        email: 'buyer@tokshop.com',
+        role: 'customer',
+      };
+      mockOrderRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.findByOrderNumber('INV-20260910-ABC123', buyer),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('harus melempar ForbiddenException jika pembeli lain mencoba mengakses invoice', async () => {
       const otherBuyer: JwtPayload = {
         sub: 5,
@@ -144,13 +168,33 @@ describe('OrdersService', () => {
       };
       mockOrderRepository.findOne.mockResolvedValue({
         id: 1,
-        orderNumber: 'INV-123',
+        orderNumber: 'INV-20260910-ABC123',
         user: { id: 1 },
       });
 
       await expect(
-        service.findByOrderNumber('INV-123', otherBuyer),
+        service.findByOrderNumber('INV-20260910-ABC123', otherBuyer),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('harus mengembalikan invoice jika diakses oleh pembeli pemilik sah', async () => {
+      const ownerBuyer: JwtPayload = {
+        sub: 1,
+        email: 'owner@tokshop.com',
+        role: 'customer',
+      };
+      const mockOrder = {
+        id: 1,
+        orderNumber: 'INV-20260910-ABC123',
+        user: { id: 1 },
+      };
+      mockOrderRepository.findOne.mockResolvedValue(mockOrder);
+
+      const result = await service.findByOrderNumber(
+        'INV-20260910-ABC123',
+        ownerBuyer,
+      );
+      expect(result).toEqual(mockOrder);
     });
   });
 });
