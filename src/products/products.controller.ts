@@ -2,6 +2,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ForbiddenException,
   Controller,
   Get,
   Post,
@@ -31,7 +32,7 @@ import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 @ApiTags('Products')
 @Controller({ path: 'products', version: '1' })
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Menambahkan produk baru (Hanya Seller)' })
@@ -152,6 +153,10 @@ export class ProductsController {
       );
     }
 
+    const product = await this.productsService.findOne(+id);
+    if (product.user?.id !== user.sub) {
+      throw new ForbiddenException('Akses ditolak!');
+    }
     const uploadDir = './uploads/products';
     if (!existsSync(uploadDir)) {
       mkdirSync(uploadDir, { recursive: true });

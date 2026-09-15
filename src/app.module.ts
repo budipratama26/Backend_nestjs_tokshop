@@ -41,7 +41,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
-        JWT_SECRET: Joi.string().required(),
+        JWT_SECRET: Joi.string().required().min(32),
         CORS_ORIGIN: Joi.string().optional(),
         DB_TYPE: Joi.string()
           .valid('better-sqlite3', 'postgres', 'mysql')
@@ -71,7 +71,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: config.get<string>('DB_TYPE') as any,
-        ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE')}:{
+        ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE') } : {
           host: config.get<string>('DB_HOST'),
           port: config.get<number>('DB_PORT'),
           username: config.get<string>('DB_USERNAME'),

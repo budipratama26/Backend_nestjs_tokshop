@@ -19,9 +19,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
   let testProductId: number;
   let testOrderNumber: string;
 
-  process.env.NODE_ENV = 'test';
-  process.env.JWT_SECRET = process.env.JWT_SECRET || 'ci_test_jwt_secret_tokshop_2026';
-
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'ci_test_jwt_secret_tokshop_2026_e2e';
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -205,6 +203,37 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .set('Authorization', `Bearer ${customerToken}`)
           .expect(200);
         expect(response.body.data.orderNumber).toBe(testOrderNumber);
+      });
+      it('harus menolak (401) jika JWT dipakai setelah akun dihapus (DELETE /v1/users/me)', async () => {
+        const zombieEmail = `zombie_${Date.now()}@tokshop.com`;
+        await request(app.getHttpServer())
+          .post('/v1/users')
+          .send({
+            name: 'Zombie',
+            email: zombieEmail,
+            password: 'password123'
+          })
+          .expect(201);
+
+        const loginRes = await request(app.getHttpServer())
+          .post('/v1/auth/login')
+          .send({
+            email: zombieEmail,
+            password: 'password123'
+          })
+          .expect(201);
+
+        const zombieToken = loginRes.body.data.access_token;
+
+        await request(app.getHttpServer())
+          .delete('/v1/users/me')
+          .set('Authorization', `Bearer ${zombieToken}`)
+          .expect(200);
+
+        await request(app.getHttpServer())
+          .get('/v1/users/me')
+          .set('Authorization', `Bearer ${zombieToken}`)
+          .expect(401);
       });
     });
   });

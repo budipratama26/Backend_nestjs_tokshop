@@ -5,10 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service.js';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private usersService: UsersService,
+  ) { }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers['authorization'];
@@ -22,9 +26,16 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = await this.jwtService.verifyAsync(token);
 
+      try {
+        await this.usersService.findOne(payload.sub);
+      } catch {
+        throw new UnauthorizedException('Akun tidak ditemukan atau sudah dihapus!');
+      }
+
       request['user'] = payload;
       return true;
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Token palsu atau kadaluarsa!');
     }
   }
