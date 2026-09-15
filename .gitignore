@@ -28,6 +28,12 @@ lerna-debug.log*
 .settings/
 *.sublime-workspace
 
+# AI tools & assistants
+.agents/
+.claude/
+.cursor/
+.devin/
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
