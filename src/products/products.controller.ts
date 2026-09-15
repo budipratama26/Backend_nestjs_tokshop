@@ -21,8 +21,9 @@ import { Roles } from '../auth/roles.decorator.js';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { QueryProductDto } from './dto/query-product.dto.js';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join } from 'path';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
@@ -79,6 +80,7 @@ export class ProductsController {
   remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.productsService.remove(+id, user);
   }
+
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload foto produk (Hanya Seller pemilik produk' })
   @ApiConsumes('multipart/form-data')
@@ -98,30 +100,7 @@ export class ProductsController {
   @Post(':id/image')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/products',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname).toLowerCase();
-          callback(null, `product-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
-        const ext = extname(file.originalname).toLowerCase();
-        const isMimeValid = file.mimetype.match(/\/(jpg|jpeg|png|webp)$/);
-
-        if (!isMimeValid || !allowedExts.includes(ext)) {
-          return callback(
-            new BadRequestException(
-              'Format file tidak didukung! Hanya boleh JPG, JPEG, PNG, WEBP',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
+      storage: memoryStorage(),
       limits: {
         fileSize: 2 * 1024 * 1024,
       },
@@ -135,8 +114,56 @@ export class ProductsController {
     if (!file) {
       throw new BadRequestException('File gambar wajib diunggah!');
     }
-    return this.productsService.updateImage(+id, file.filename, user);
+
+    const magicBytes: Record<string, { signature: number[]; ext: string }[]> = {
+      'image/jpeg': [{ signature: [0xFF, 0xD8, 0xFF], ext: '.jpg' }],
+      'image/png': [{ signature: [0x89, 0x50, 0x4E, 0x47], ext: '.png' }],
+      'image/webp': [{ signature: [0x52, 0x49, 0x46, 0x46], ext: '.webp' }],
+    };
+
+    const buffer = file.buffer;
+    if (!buffer || buffer.length < 4) {
+      throw new BadRequestException('File tidak valid atau kosong!');
+    }
+
+    let detectedExt: string | null = null;
+
+    for (const [, signatures] of Object.entries(magicBytes)) {
+      for (const { signature, ext } of signatures) {
+        const match = signature.every((byte, i) => buffer[i] === byte);
+        if (match) {
+          if (ext === '.webp') {
+            const webpMark = buffer.slice(8, 12).toString('ascii');
+            if (webpMark === 'WEBP') {
+              detectedExt = ext;
+            }
+          } else {
+            detectedExt = ext;
+          }
+          break;
+        }
+      }
+      if (detectedExt) break;
+    }
+
+    if (!detectedExt) {
+      throw new BadRequestException(
+        'File bukan gambar valid! Hanya JPG, PNG, dan WEBP yang didukung.',
+      );
+    }
+
+    const uploadDir = './uploads/products';
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const filename = `product-${uniqueSuffix}${detectedExt}`;
+    writeFileSync(join(uploadDir, filename), buffer);
+
+    return this.productsService.updateImage(+id, filename, user);
   }
+
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Memulihkan produk yang pernah di hapus (Restore)' })
   @UseGuards(AuthGuard, RolesGuard)

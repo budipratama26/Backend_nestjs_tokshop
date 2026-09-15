@@ -5,7 +5,7 @@ import { ProductsModule } from './products/products.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrdersModule } from './orders/orders.module.js';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -23,13 +23,15 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   imports: [
     LoggerModule.forRoot({
       pinoHttp: {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            singleLine: true,
-          },
-        },
+        transport:
+          process.env.NODE_ENV !== 'production' ? {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              singleLine: true,
+            },
+          }
+            : undefined,
       },
     }),
     ConfigModule.forRoot({
@@ -41,6 +43,14 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         PORT: Joi.number().default(3000),
         JWT_SECRET: Joi.string().required(),
         CORS_ORIGIN: Joi.string().optional(),
+        DB_TYPE: Joi.string()
+          .valid('better-sqlite3', 'postgres', 'mysql')
+          .default('better-sqlite3'),
+        DB_HOST: Joi.string().default('localhost'),
+        DB_PORT: Joi.number().default(5432),
+        DB_USERNAME: Joi.string().optional(),
+        DB_PASSWORD: Joi.string().optional(),
+        DB_DATABASE: Joi.string().default('database.sqlite'),
       }),
     }),
 
@@ -52,18 +62,27 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ]),
 
     ObserveModule.forRoot({
-      appKey: 'DijCBdYxSmPfFDFr',
+      appKey: process.env.OBSERVE_APP_KEY || '',
       appSecret: process.env.APP_SECRET || '',
       serviceId: 'be-nestjs',
     }),
 
-    TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: 'database.sqlite',
-      autoLoadEntities: true,
-      synchronize: false,
-      migrationsRun: process.env.NODE_ENV !== 'test',
-      migrations: ['dist/migrations/*.js'],
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: config.get<string>('DB_TYPE') as any,
+        ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE')}:{
+          host: config.get<string>('DB_HOST'),
+          port: config.get<number>('DB_PORT'),
+          username: config.get<string>('DB_USERNAME'),
+          password: config.get<string>('DB_PASSWORD'),
+          database: config.get<string>('DB_DATABASE'),
+        }),
+        autoLoadEntities: true,
+        synchronize: false,
+        migrationsRun: config.get<string>('NODE_ENV') !== 'test',
+        migrations: ['dist/migrations/*.js'],
+      }),
     }),
     ProductsModule,
     UsersModule,

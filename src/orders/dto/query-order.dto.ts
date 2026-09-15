@@ -5,7 +5,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class QueryOrderDto {
   @ApiPropertyOptional({ example: 1, description: 'halaman ke berapa' })
   @IsOptional()
+  @IsInt({ message: 'Halaman harus berupa bilangan bulat' })
   @Type(() => Number)
+  @Max(10000, { message: 'Halaman maksimal 10000' })
   @Min(1, { message: 'halaman minimal 1' })
   page?: number = 1;
 

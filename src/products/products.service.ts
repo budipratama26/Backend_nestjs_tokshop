@@ -18,7 +18,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-  ) {}
+  ) { }
   async create(createProductDto: CreateProductDto, user: JwtPayload) {
     const newProduct = this.productRepository.create({
       ...createProductDto,
@@ -38,6 +38,8 @@ export class ProductsService {
     const search = queryDto?.search;
     const sortBy = queryDto?.sortBy || 'id';
     const order = (queryDto?.order?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+    const allowedSortColumns = ['id', 'name', 'price', 'quantity'];
+    const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'id';
     const query = this.productRepository
       .createQueryBuilder('product')
       .leftJoin('product.user', 'user')
@@ -49,7 +51,7 @@ export class ProductsService {
       );
     }
 
-    query.orderBy(`product.${sortBy}`, order);
+    query.orderBy(`product.${safeSortBy}`, order);
 
     query.skip((page - 1) * limit).take(limit);
     const [products, total] = await query.getManyAndCount();

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsIn, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsInt, Min, Max, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -27,6 +27,7 @@ export class QueryProductDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(200, { message: 'Kata kunci pencarian maksimal 200 karakter!' })
   search?: string;
 
   @ApiPropertyOptional({

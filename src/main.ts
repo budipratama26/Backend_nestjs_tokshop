@@ -28,11 +28,21 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+      },
+    },
+  }),
+  );
 
   const corsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-    : true;
+    : [];
 
   app.enableCors({
     origin: corsOrigins,
@@ -61,19 +71,20 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  const config = new DocumentBuilder()
-    .setTitle('Tokshop API')
-    .setDescription(
-      'E-Commerce RESTful API Portofolio - Concurrency, RBAC, Data Integrity, and Testing',
-    )
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Tokshop API')
+      .setDescription(
+        'E-Commerce RESTful API Portofolio - Concurrency, RBAC, Data Integrity, and Testing',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('api', app, document);
-
+    SwaggerModule.setup('api', app, document);
+  }
   await app.listen(process.env.PORT ?? 3000);
 }
 await bootstrap();

@@ -22,7 +22,7 @@ export class UsersService {
       withDeleted: true,
     });
     if (existingUser) {
-      throw new BadRequestException('Email sudah terdaftar!');
+      throw new BadRequestException('Registrasi gagal, silahkan coba email lain');
     }
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(

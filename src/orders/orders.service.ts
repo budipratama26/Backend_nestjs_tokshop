@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Not } from 'typeorm';
 import { Order, OrderStatus } from './entities/order.entity.js';
 import { Product } from '../products/entities/product.entity.js';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,7 +20,7 @@ export class OrdersService {
     private orderRepository: Repository<Order>,
 
     private dataSource: DataSource,
-  ) {}
+  ) { }
 
   async create(CreateOrderDto: CreateOrderDto, user: JwtPayload) {
     return await this.dataSource.transaction(async (manager) => {
@@ -90,6 +90,9 @@ export class OrdersService {
     });
   }
   async findByOrderNumber(orderNumber: string, user: JwtPayload) {
+    if (!/^INV-\d{8}-[A-F0-9]{6}$/.test(orderNumber) && !/^INV-LEGACY-\d+$/.test(orderNumber)) {
+      throw new NotFoundException('Format nomor pesanan tidak valid!');
+    }
     const order = await this.orderRepository.findOne({
       where: { orderNumber },
       relations: {

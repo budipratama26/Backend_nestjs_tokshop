@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -10,5 +10,7 @@ export class UpdateUserDto {
   @IsString()
   @IsNotEmpty({ message: 'Nama tidak boleh kosong jika diisi!' })
   @IsOptional()
+  @MaxLength(100, { message: 'Nama maksimal 100 karakter!' })
+  @Matches(/^[^<>]*$/, { message: 'Nama tidak boleh mengandung yang aneh!' })
   name?: string;
 }

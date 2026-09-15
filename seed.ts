@@ -24,7 +24,8 @@ async function runSeed() {
         await dataSource.destroy();
         return;
     }
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const seedPassword = process.env.SEED_PASSWORD || 'password123';
+    const hashedPassword = await bcrypt.hash(seedPassword, 10);
 
     const seller = userRepo.create({
         name: 'Name Seller',
@@ -79,6 +80,7 @@ async function runSeed() {
     console.log('Admin      : admin@tokshop.com    | Password: password123');
     console.log('Seller     : seller@tokshop.com   | Password: password123');
     console.log('Customer   : customer@tokshop.com | Password: password123');
+    console.log('Password   : (gunakan SEED_PASSWORD env variable, default: password123)');
     console.log('=========================================================');
     await dataSource.destroy();
 }
