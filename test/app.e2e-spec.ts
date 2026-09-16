@@ -82,7 +82,6 @@ describe('TokSHop API (E2E Workflow)', async () => {
 
   describe('1. Authentication Flow', () => {
     const randomEmail = `test_${Date.now()}@tokshop.com`;
-
     it('harus berhasil registrasi customer baru (POST /v1/users)', async () => {
       const response = await request(app.getHttpServer())
         .post('/v1/users')
