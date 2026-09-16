@@ -10,7 +10,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     env:
-      JWT_SECRET: ci_test_jwt_secret_tokshop_2026
+      JWT_SECRET: ci_test_jwt_secret_tokshop_2026_e2e
       NODE_ENV: test
 
     steps:
