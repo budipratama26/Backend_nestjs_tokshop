@@ -61,29 +61,32 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       },
     ]),
 
-    ObserveModule.forRoot({
-      appKey: process.env.OBSERVE_APP_KEY || '',
-      appSecret: process.env.APP_SECRET || '',
-      serviceId: 'be-nestjs',
-    }),
+    ...(process.env.NODE_ENV !== 'test' ? [
+      ObserveModule.forRoot({
+        appKey: process.env.OBSERVE_APP_KEY || '',
+        appSecret: process.env.APP_SECRET || '',
+        serviceId: 'be-nestjs',
+      }),
+    ]
+      : []),
 
     TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: config.get<string>('DB_TYPE') as any,
-        ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE') } : {
-          host: config.get<string>('DB_HOST'),
-          port: config.get<number>('DB_PORT'),
-          username: config.get<string>('DB_USERNAME'),
-          password: config.get<string>('DB_PASSWORD'),
-          database: config.get<string>('DB_DATABASE'),
+        inject: [ConfigService],
+        useFactory: (config: ConfigService) => ({
+          type: config.get<string>('DB_TYPE') as any,
+          ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE') } : {
+            host: config.get<string>('DB_HOST'),
+            port: config.get<number>('DB_PORT'),
+            username: config.get<string>('DB_USERNAME'),
+            password: config.get<string>('DB_PASSWORD'),
+            database: config.get<string>('DB_DATABASE'),
+          }),
+          autoLoadEntities: true,
+          synchronize: false,
+          migrationsRun: config.get<string>('NODE_ENV') !== 'test',
+          migrations: ['dist/migrations/*.js'],
         }),
-        autoLoadEntities: true,
-        synchronize: false,
-        migrationsRun: config.get<string>('NODE_ENV') !== 'test',
-        migrations: ['dist/migrations/*.js'],
       }),
-    }),
     ProductsModule,
     UsersModule,
     AuthModule,
