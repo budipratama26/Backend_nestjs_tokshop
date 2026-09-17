@@ -3,6 +3,7 @@ import { ProductsService } from './products.service.js';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
+import { AuditLogService } from '../common/audit-log.service.js';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -18,6 +19,10 @@ describe('ProductsService', () => {
     createQueryBuilder: vi.fn(),
   };
 
+  const mockAuditLogService = {
+    log: vi.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -25,6 +30,10 @@ describe('ProductsService', () => {
         {
           provide: getRepositoryToken(Product),
           useValue: mockRepository,
+        },
+        {
+          provide: AuditLogService,
+          useValue: mockAuditLogService,
         },
       ],
     }).compile();
@@ -43,7 +52,7 @@ describe('ProductsService', () => {
         quantity: 5,
         description: 'Test description',
       };
-      const user = { sub: 1 };
+      const user = { sub: 1, email: 'test@tokshop.com', role: 'seller' };
       const expectedProduct = { id: 1, ...createDto, user: { id: 1 } };
       mockRepository.create.mockReturnValue(expectedProduct);
       mockRepository.save.mockResolvedValue(expectedProduct);

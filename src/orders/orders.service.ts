@@ -12,13 +12,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { randomBytes } from 'node:crypto';
 import { QueryOrderDto } from './dto/query-order.dto.js';
+import { AuditLogService } from '../common/audit-log.service.js';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-
+    private auditLogService: AuditLogService,
     private dataSource: DataSource,
   ) { }
 
@@ -74,6 +75,17 @@ export class OrdersService {
         product: { id: product.id },
       });
       await manager.save(Order, newOrder);
+      await this.auditLogService.log({
+        action: 'ORDER_CREATED',
+        userId: user.sub,
+        targetId: String(newOrder.id),
+        targetType: 'Order',
+        details: {
+          orderNumber: newOrder.orderNumber,
+          productId: product.id,
+          totalPrice: totalPrice,
+        },
+      });
       return {
         message: 'Transaksi berhasil! Pesanan anda telah dibuat',
         data: {

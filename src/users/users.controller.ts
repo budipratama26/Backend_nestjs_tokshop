@@ -23,11 +23,14 @@ import { Roles } from '../auth/roles.decorator.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
+import { AuthService } from '../auth/auth.service.js';
 
 @ApiTags('Users')
 @Controller({ path: 'users', version: '1' })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService,
+    private authService: AuthService
+  ) { }
 
   @ApiOperation({ summary: 'Registrasi User baru (Customer / Seller)' })
   @ApiResponse({
@@ -77,7 +80,9 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Hapus akun saya sendiri' })
   @Delete('me')
-  removeMe(@CurrentUser() user: JwtPayload) {
+  async removeMe(@CurrentUser() user: JwtPayload) {
+    await this.authService.revokeAllforUser(user.sub, user.jti, user.exp);
+
     return this.usersService.remove(user.sub);
   }
 

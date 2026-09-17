@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -35,7 +36,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       });
       return;
     }
-    console.error('Unhandled exception:', exception);
+    const logger = new Logger('HttpExceptionFilter');
+    logger.error(
+      `Unhandled exception: ${exception instanceof Error ? exception.message : 'Unknown'}`,
+      exception instanceof Error ? exception.stack : undefined,
+    );
 
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,

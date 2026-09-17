@@ -11,6 +11,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
+import { AuditLogService } from '../common/audit-log.service.js';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -40,6 +41,10 @@ describe('OrdersService', () => {
     transaction: vi.fn(async (callback) => callback(mockEntityManager)),
   };
 
+  const mockAuditLogService = {
+    log: vi.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,6 +60,10 @@ describe('OrdersService', () => {
         {
           provide: DataSource,
           useValue: mockDataSource,
+        },
+        {
+          provide: AuditLogService,
+          useValue: mockAuditLogService,
         },
       ],
     }).compile();

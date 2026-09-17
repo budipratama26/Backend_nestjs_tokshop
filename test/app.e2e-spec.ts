@@ -55,7 +55,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
       userRepo.create({
         name: 'Seller E2E',
         email: 'seller_e2e@tokshop.com',
-        password: 'password123',
+        password: 'Password123',
         role: UserRole.SELLER,
       }),
     );
@@ -88,7 +88,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
         .send({
           name: 'Tester E2E',
           email: randomEmail,
-          password: 'password123',
+          password: 'Password123',
         })
         .expect(201);
 
@@ -101,7 +101,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
         .post('/v1/auth/login')
         .send({
           email: randomEmail,
-          password: 'password123',
+          password: 'Password123',
         })
         .expect(201);
 
@@ -179,7 +179,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .send({
             name: 'Customer Lain',
             email: otherEmail,
-            password: 'password123',
+            password: 'Password123',
           })
           .expect(201);
 
@@ -187,7 +187,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .post('/v1/auth/login')
           .send({
             email: otherEmail,
-            password: 'password123',
+            password: 'Password123',
           })
           .expect(201);
 
@@ -212,7 +212,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .send({
             name: 'Zombie',
             email: zombieEmail,
-            password: 'password123'
+            password: 'Password123'
           })
           .expect(201);
 
@@ -220,7 +220,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .post('/v1/auth/login')
           .send({
             email: zombieEmail,
-            password: 'password123'
+            password: 'Password123'
           })
           .expect(201);
 

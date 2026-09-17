@@ -31,6 +31,12 @@ export class User {
   @Column({ type: 'varchar', default: UserRole.CUSTOMER })
   role: UserRole;
 
+  @Column({ default: 0, select: false })
+  failedLoginAttempts: number;
+
+  @Column({ type: 'datetime', nullable: true, select: false })
+  lockedUntil: Date | null;
+
   @DeleteDateColumn()
   deletedAt: Date;
 

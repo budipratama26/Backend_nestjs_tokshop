@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrdersModule } from './orders/orders.module.js';
+import { CommonModule } from './common/common.module.js';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
@@ -16,6 +17,7 @@ import Joi from 'joi';
 import { LoggerModule } from 'nestjs-pino';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health.controller.js';
+import { ScheduleModule } from '@nestjs/schedule';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -71,32 +73,34 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       : []),
 
     TypeOrmModule.forRootAsync({
-        inject: [ConfigService],
-        useFactory: (config: ConfigService) => ({
-          type: config.get<string>('DB_TYPE') as any,
-          ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE') } : {
-            host: config.get<string>('DB_HOST'),
-            port: config.get<number>('DB_PORT'),
-            username: config.get<string>('DB_USERNAME'),
-            password: config.get<string>('DB_PASSWORD'),
-            database: config.get<string>('DB_DATABASE'),
-          }),
-          autoLoadEntities: true,
-          synchronize: false,
-          migrationsRun: config.get<string>('NODE_ENV') !== 'test',
-          migrations: ['dist/migrations/*.js'],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: config.get<string>('DB_TYPE') as any,
+        ...(config.get<string>('DB_TYPE') === 'better-sqlite3' ? { database: config.get<string>('DB_DATABASE') } : {
+          host: config.get<string>('DB_HOST'),
+          port: config.get<number>('DB_PORT'),
+          username: config.get<string>('DB_USERNAME'),
+          password: config.get<string>('DB_PASSWORD'),
+          database: config.get<string>('DB_DATABASE'),
         }),
+        autoLoadEntities: true,
+        synchronize: false,
+        migrationsRun: config.get<string>('NODE_ENV') !== 'test',
+        migrations: ['dist/migrations/*.js'],
       }),
+    }),
     ProductsModule,
     UsersModule,
     AuthModule,
     OrdersModule,
+    CommonModule,
     TerminusModule,
 
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
+  ScheduleModule.forRoot(),
   ],
   controllers: [AppController, HealthController],
   providers: [

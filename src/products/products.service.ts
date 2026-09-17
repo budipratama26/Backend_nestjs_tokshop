@@ -12,12 +12,14 @@ import { QueryProductDto } from './dto/query-product.dto.js';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface.js';
 import { join } from 'node:path';
 import * as fs from 'node:fs';
+import { AuditLogService } from '../common/audit-log.service.js';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    private auditLogService: AuditLogService,
   ) { }
   async create(createProductDto: CreateProductDto, user: JwtPayload) {
     const newProduct = this.productRepository.create({
@@ -25,6 +27,14 @@ export class ProductsService {
       user: { id: user.sub },
     });
     await this.productRepository.save(newProduct);
+
+    await this.auditLogService.log({
+      action: 'PRODUCT_CREATED',
+      userId: user.sub,
+      targetId: String(newProduct.id),
+      targetType: 'Product',
+      details: { name: createProductDto.name },
+    });
 
     return {
       message: 'Barang telah di tambahkan',
@@ -117,6 +127,13 @@ export class ProductsService {
       throw new ForbiddenException('Akses ditolak!');
     }
     await this.productRepository.softDelete(id);
+
+    await this.auditLogService.log({
+      action: 'PRODUCT_DELETED',
+      userId: user.sub,
+      targetId: String(id),
+      targetType: 'Product',
+    });
 
     return {
       message: `Barang dengan ID ${id} berhasil dihapus dari database!`,

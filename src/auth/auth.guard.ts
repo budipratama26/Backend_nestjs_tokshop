@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service.js';
+import { TokenBlacklistService } from './token-blacklist.service.js';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private usersService: UsersService,
+    private tokenBlacklistService: TokenBlacklistService,
   ) { }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -25,6 +27,10 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const payload = await this.jwtService.verifyAsync(token);
+
+      if (payload.jti && await this.tokenBlacklistService.isBlacklisted(payload.jti)) {
+        throw new UnauthorizedException('Token sudah tidak valid!');
+      }
 
       try {
         await this.usersService.findOne(payload.sub);

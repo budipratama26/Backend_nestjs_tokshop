@@ -18,12 +18,15 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    example: 'password123',
+    example: 'Password123',
     description: 'Password minimal 8 karakter',
     required: false,
   })
   @IsString()
   @MinLength(8, { message: `password minimal 8 karakter` })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, {
+    message: 'Password harus mengandung minimal 1 huruf kecil, 1 huruf besar, dan 1 angka'
+  })
   @MaxLength(72, { message: 'Password maksimal 72 karakter!' })
   password: string;
 }

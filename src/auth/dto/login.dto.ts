@@ -10,7 +10,7 @@ export class LoginDto {
   @MaxLength(255, { message: 'Email maksimal 255 karakter!' })
   email: string;
 
-  @ApiProperty({ example: 'password123', description: 'Password akun' })
+  @ApiProperty({ example: 'Password123', description: 'Password akun' })
   @IsString()
   @IsNotEmpty({ message: `Password tidak boleh kosong!` })
   @MaxLength(72, { message: 'Password maksimal 72 karakter!' })

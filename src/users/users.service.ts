@@ -9,13 +9,15 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity.js';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AuditLogService } from '../common/audit-log.service.js';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+    private auditLogService: AuditLogService,
+  ) { }
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.usersRepository.findOne({
       where: { email: createUserDto.email },
@@ -37,6 +39,12 @@ export class UsersService {
     });
 
     await this.usersRepository.save(newUser);
+
+    await this.auditLogService.log({
+      action: 'REGISTER',
+      userId: newUser.id,
+      details: { email: newUser.email, role: newUser.role },
+    });
 
     return {
       message: `Registrasi user berhasil!`,
@@ -79,7 +87,7 @@ export class UsersService {
   async findByEmail(email: string) {
     return await this.usersRepository
       .createQueryBuilder('user')
-      .addSelect('user.password')
+      .addSelect(['user.password', 'user.failedLoginAttempts', 'user.lockedUntil'])
       .where('user.email = :email', { email })
       .getOne();
   }
@@ -102,6 +110,16 @@ export class UsersService {
   async remove(id: number) {
     await this.findOne(id);
     await this.usersRepository.softDelete(id);
+    await this.auditLogService.log({
+      action: 'DELETE_ACCOUNT',
+      userId: id,
+    });
     return { message: `User dengan ID ${id} berhasil di hapus` };
+  }
+  async updateLoginAttempts(userId: number, attempts: number, lockedUntil: Date | null) {
+    await this.usersRepository.update(userId, {
+      failedLoginAttempts: attempts,
+      lockedUntil: lockedUntil,
+    });
   }
 }

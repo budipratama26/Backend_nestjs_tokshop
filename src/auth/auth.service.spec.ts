@@ -4,6 +4,10 @@ import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { RefreshToken } from './entities/refresh-token.entity.js';
+import { TokenBlacklistService } from './token-blacklist.service.js';
+import { AuditLogService } from '../common/audit-log.service.js';
 import * as bcrypt from 'bcrypt';
 
 vi.mock('bcrypt', () => ({
@@ -15,10 +19,28 @@ describe('AuthService', () => {
 
   const mockUsersService = {
     findByEmail: vi.fn(),
+    updateLoginAttempts: vi.fn(),
   };
 
   const mockJwtService = {
     signAsync: vi.fn(),
+  };
+
+  const mockRefreshTokenRepository = {
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    update: vi.fn(),
+  };
+
+  const mockTokenBlacklistService = {
+    blacklist: vi.fn(),
+    isBlacklisted: vi.fn(),
+    cleanup: vi.fn(),
+  };
+
+  const mockAuditLogService = {
+    log: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -33,6 +55,19 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: getRepositoryToken(RefreshToken),
+          useValue: mockRefreshTokenRepository,
+        },
+        {
+          provide: TokenBlacklistService,
+          useValue: mockTokenBlacklistService,
+        },
+        {
+          provide: AuditLogService,
+          useValue: mockAuditLogService,
+        },
+        
       ],
     }).compile();
 
@@ -57,6 +92,8 @@ describe('AuthService', () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
       mockJwtService.signAsync.mockResolvedValue('mock_jwt_token');
+      mockRefreshTokenRepository.create.mockReturnValue({ id: 'uuid-1', tokenHash: 'hash' });
+      mockRefreshTokenRepository.save.mockResolvedValue({ id: 'uuid-1' });
 
       const result = await service.login({
         email: 'budi@tokshop.com',
@@ -65,17 +102,21 @@ describe('AuthService', () => {
 
       expect(result.message).toBe('Login Berhasil!');
       expect(result.access_token).toBe('mock_jwt_token');
+      expect(result.refresh_token).toBeDefined();
       expect(result.user).toEqual({
         id: 1,
         name: 'Budi Niaga',
         email: 'budi@tokshop.com',
         role: 'customer',
       });
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
-        sub: 1,
-        email: 'budi@tokshop.com',
-        role: 'customer',
-      });
+      expect(mockJwtService.signAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: 1,
+          email: 'budi@tokshop.com',
+          role: 'customer',
+          jti: expect.any(String),
+        }),
+      );
     });
 
     it('harus melempar UnauthorizedException dan tetap memanggil bcrypt compare (mitigasi timing attack) jika user tidak ditemukan', async () => {
@@ -89,7 +130,6 @@ describe('AuthService', () => {
         }),
       ).rejects.toThrow(UnauthorizedException);
 
-      // Verifikasi bahwa bcrypt.compare TETAP dipanggil dengan DUMMY_HASH
       expect(bcrypt.compare).toHaveBeenCalledWith(
         'password123',
         expect.stringContaining('$2b$10$'),
@@ -117,3 +157,4 @@ describe('AuthService', () => {
     });
   });
 });
+
