@@ -11,16 +11,22 @@ describe('RolesGuard', () => {
   let guard: RolesGuard;
   let reflector: Reflector;
 
+
+  const mockAuditLogService = {
+    log: vi.fn(),
+  } as any;
+
   beforeEach(() => {
     reflector = new Reflector();
-    guard = new RolesGuard(reflector);
+    guard = new RolesGuard(reflector, mockAuditLogService);
   });
+
   const createMockContext = (user?: any): ExecutionContext => {
     return {
       getHandler: vi.fn(),
       getClass: vi.fn(),
       switchToHttp: () => ({
-        getRequest: () => ({ user }),
+        getRequest: () => ({ user, method: 'GET', url: '/v1/test', ip: '127.0.0.1' }),
       }),
     } as unknown as ExecutionContext;
   };

@@ -96,6 +96,20 @@ describe('TokSHop API (E2E Workflow)', async () => {
 
       expect(response.body.data.data.role).toBe('customer');
     });
+    it('harus mengabaikan field "role" saat registrasi (Mass Assignment protection)', async () => {
+      const hackEmail = `hack_${Date.now()}@tokshop.com`;
+      const response = await request(app.getHttpServer())
+        .post('/v1/users')
+        .send({
+          name: 'Hacker',
+          email: hackEmail,
+          password: 'Password123',
+          role: 'admin',
+        })
+        .expect(400);
+      expect(JSON.stringify(response.body.message)).toContain('role');
+    });
+
     it('harus berhasil login dan mengembalikan JWT token (POST /v1/auth/login)', async () => {
       const response = await request(app.getHttpServer())
         .post('/v1/auth/login')
@@ -108,6 +122,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
       expect(response.body.data.access_token).toBeDefined();
       customerToken = response.body.data.access_token;
     });
+
     it('harus menolak login jika password salah (POST /v1/auth/login)', async () => {
       await request(app.getHttpServer())
         .post('/v1/auth/login')
@@ -118,6 +133,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
         .expect(401);
     });
   });
+
   describe('2. Products & Orders Flow', () => {
     it('harus dapat melihat katalog produk publik (GET /v1/products)', async () => {
       const response = await request(app.getHttpServer())
@@ -129,6 +145,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
       expect(Array.isArray(response.body.data.items)).toBe(true);
       testProductId = response.body.data.items[0].id;
     });
+
     it('harus menolak checkout jika tidak menyertakan JWT token (POST /v1/orders)', async () => {
       await request(app.getHttpServer())
         .post('/v1/orders')
@@ -138,6 +155,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
         })
         .expect(401);
     });
+
     it('harus berhasil checkout produk dengan invoice jika token valid (POST /v1/orders)', async () => {
       const response = await request(app.getHttpServer())
         .post('/v1/orders')
@@ -153,6 +171,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
       expect(response.body.data.data.quantity).toBe(1);
       testOrderNumber = response.body.data.data.orderNumber;
     });
+
     describe('3. Security, RBAC & Ownership flow', () => {
       it('harus menolak (403) jika customer mengakses endpoint khusus admin (GET /v1/users/:id)', async () => {
         await request(app.getHttpServer())
@@ -160,6 +179,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .set('Authorization', `Bearer ${customerToken}`)
           .expect(403);
       });
+
       it('harus menolak (403) jika customer mencoba membuat produk baru (POST /v1/products)', async () => {
         await request(app.getHttpServer())
           .post('/v1/products')
@@ -172,6 +192,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           })
           .expect(403);
       });
+
       it('harus menolak (403) jika customer lain mencoba mengintip invoice orang lain (GET /v1/orders/:orderNumber', async () => {
         const otherEmail = `other_${Date.now()}@tokshop.com`;
         await request(app.getHttpServer())
@@ -198,6 +219,7 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .set('Authorization', `Bearer ${otherToken}`)
           .expect(403);
       });
+
       it('harus berhasil (200) jika customer pemilik sah melihat invoicenya sendiri (GET /v1/orders/:orderNumber)', async () => {
         const response = await request(app.getHttpServer())
           .get(`/v1/orders/${testOrderNumber}`)
@@ -205,6 +227,41 @@ describe('TokSHop API (E2E Workflow)', async () => {
           .expect(200);
         expect(response.body.data.orderNumber).toBe(testOrderNumber);
       });
+
+      it('harus menolak (400) upload file .exe (File Upload Abuse / Magic Byte)', async () => {
+        const sellerEmail = `seller_test_${Date.now()}@tokshop.com`;
+        await request(app.getHttpServer())
+          .post('/v1/users')
+          .send({
+            name: 'Seller Upload Test',
+            email: sellerEmail,
+            password: 'Password123'
+          })
+          .expect(201);
+        await dataSource.getRepository(User).update(
+          { email: sellerEmail },
+          { role: UserRole.SELLER },
+        );
+        const loginRes = await request(app.getHttpServer())
+          .post('/v1/auth/login')
+          .send({
+            email: sellerEmail,
+            password: 'Password123'
+          })
+          .expect(201);
+        const testSellerToken = loginRes.body.data.access_token;
+
+        const fakeExe = Buffer.from([0x4D, 0x5A, 0x90, 0x00]);
+
+        const response = await request(app.getHttpServer())
+          .post(`/v1/products/${testProductId}/image`)
+          .set('Authorization', `Bearer ${testSellerToken}`)
+          .attach('file', fakeExe, 'malware.exe')
+          .expect(400);
+
+        expect(response.body.message).toContain('gambar valid');
+      });
+
       it('harus menolak (401) jika JWT dipakai setelah akun dihapus (DELETE /v1/users/me)', async () => {
         const zombieEmail = `zombie_${Date.now()}@tokshop.com`;
         await request(app.getHttpServer())
